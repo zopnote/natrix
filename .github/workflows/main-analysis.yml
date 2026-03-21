@@ -1,0 +1,33 @@
+name: Main branch integrity
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'lib/**'
+      - 'example/**'
+      - 'test/**'
+      - 'pubspec.yaml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'lib/**'
+      - 'example/**'
+      - 'test/**'
+      - 'pubspec.yaml'
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - name: Install dependencies
+        run: dart pub get
+      - name: Analyze code
+        run: dart analyze --fatal-infos
+      - name: Outdated dependencies
+        run: dart pub outdated
+      - name: Run tests
+        run: dart test
