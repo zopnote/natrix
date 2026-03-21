@@ -74,6 +74,8 @@ final class Response {
   /// Returns if the level is greater than 3, what an error indicates.
   bool get isError => level.value >= 3;
 
+  int get errorCode => isError ? 1 : 0;
+
   @override
   String toString() => message;
 }

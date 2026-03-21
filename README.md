@@ -1,5 +1,4 @@
 # ![logo](.github/images/logo.png)
-
 [![Latest release](https://img.shields.io/github/v/release/zopnote/natrix?include_prereleases&label=Latest%20release)](https://github.com/zopnote/natrix/releases)
 [![Stability of main branch](https://github.com/zopnote/natrix/actions/workflows/main-analysis.yml/badge.svg)](https://github.com/zopnote/natrix/actions/workflows/dart-project-quality.yml)
 

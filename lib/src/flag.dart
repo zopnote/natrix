@@ -3,19 +3,12 @@
  *
  * It is intended to be extended for every special use case to deliver formatting
  * and parsing.
- *
- * **As example** you should extend the class [Flag], for a command line flag
- * representing a platform target formatted as [system_processor].
- * Then you can hide the Flag member variables and you have to
- * provide a formating and parsing function.
- *
  */
-class Flag<T> {
-  Flag({
+abstract class Flag<T> {
+  const Flag({
     required this.name,
-    required this.value,
-    required this.format,
-    required this.parse,
+    this.shortName,
+    required this.defaultValue,
     this.examples = const [],
     this.description = "",
   });
@@ -27,6 +20,12 @@ class Flag<T> {
   final String name;
 
   /**
+   * A shortage of the flags name, that have to be referenced
+   * when typing in the command line.
+   */
+  final String? shortName;
+
+  /**
    * Description of the flag, explaining the purpose of the property.
    *
    * It will be displayed as part of the help/syntax message.
@@ -36,7 +35,7 @@ class Flag<T> {
   /**
    * The mutable reference to the flags value.
    */
-  T value;
+  final T defaultValue;
 
   /**
    * The flags example values done for guiding.
@@ -46,7 +45,7 @@ class Flag<T> {
   /**
    * Returns the flags value as a formatted string.
    */
-  String getFormatted() => format(value);
+  String getFormatted() => format(defaultValue);
 
   /**
    * Returns the flag example values as formatted strings.
@@ -59,18 +58,13 @@ class Flag<T> {
    * Parses a string into the flags value type.
    * Returns the parsed value.
    */
-  final T Function(String raw) parse;
+  T parse(String raw);
 
   /**
    * Formats the flags value into a string,
    * that can be parsed by the Flag's [parse] function.
    */
-  final String Function(T value) format;
-
-  /**
-   * Sets the parsed raw value as the flags one.
-   */
-  void setParsed(String raw) => value = parse(raw);
+  String format(T value);
 
   @override
   int get hashCode => Object.hash(name, description, examples, parse, format);
@@ -81,7 +75,7 @@ class Flag<T> {
   }
 
   @override
-  String toString() => format(value);
+  String toString() => format(defaultValue);
 
   /**
    * Syntax message part describing the flag.
@@ -105,12 +99,15 @@ class Flag<T> {
  * A flag that contains a [String] as it's value.
  */
 final class TextFlag extends Flag<String> {
-  TextFlag({required super.name, super.description, super.value = ""})
-    : super(format: _format, parse: _parse);
+  const TextFlag({
+    required super.name,
+    super.description,
+    super.defaultValue = "",
+  });
 
-  static String _format(String value) => value;
+  String format(String value) => value;
 
-  static String _parse(String raw) {
+  String parse(String raw) {
     final List<int> deletable = const [];
     for (int i = 0; i < raw.length - 1; i++) {
       if (raw.codeUnitAt(i) != '"') {
@@ -140,10 +137,12 @@ final class TextFlag extends Flag<String> {
  * it is interpreted as true, even without specifying it directly.
  */
 final class BoolFlag extends Flag<bool> {
-  BoolFlag({required super.name, required super.value, super.description})
-    : super(format: _format, parse: _parse);
-
-  static String _format(bool value) => value.toString();
-
-  static bool _parse(String raw) => raw == "true" ? true : false;
+  const BoolFlag({
+    super.shortName,
+    required super.name,
+    final bool value = false,
+    super.description,
+  }) : super(defaultValue: value);
+  String format(bool value) => value.toString();
+  bool parse(String raw) => raw == "true" ? true : false;
 }
