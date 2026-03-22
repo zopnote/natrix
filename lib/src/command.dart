@@ -2,7 +2,6 @@ import 'dart:async';
 
 import '../natrix.dart';
 
-
 /// An action, callable by a user of the command line environment.
 ///
 /// Whenever building a cli application, you need an entry point for
@@ -25,10 +24,20 @@ class Command {
     this.flags = const [],
     this.subCommands = const [],
   }) {
-    if (use.length > 15) {
-      throw Exception(
-        "The usage of a command shouldn't be longer than 15 characters.",
-      );
+    for (final Flag flag in flags) {
+      for (final Flag other in flags) {
+        final bool sameShort =
+            flag.shortName != null && flag.shortName == other.shortName;
+        final bool sameName = flag.name == other.name;
+        if (sameShort || sameName) {
+          throw Exception(
+            "You cannot use the same identifier twice inside a single flags tree."
+            " The identifier "
+            "${[sameName ? flag.name : "", sameShort ? flag.shortName : ""].join(", ")} "
+            "occurred twice.",
+          );
+        }
+      }
     }
   }
 

@@ -2,12 +2,7 @@ import 'package:natrix/natrix.dart';
 import 'package:natrix/src/runner.dart';
 
 Future<void> main(final List<String> args) async {
-  final NatrixPipeline pipeline = NatrixPipeline(
-    arguments: args,
-    stencil: ConfigurableNatrixStencil(
-
-    ),
-  );
+  final NatrixPipeline pipeline = NatrixPipeline(arguments: args);
   await pipeline.run(
     Command(
       short: "",

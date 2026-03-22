@@ -8,7 +8,7 @@ abstract class Flag<T> {
   const Flag({
     required this.name,
     this.shortName,
-    required this.defaultValue,
+    required this.value,
     this.examples = const [],
     this.description = "",
   });
@@ -35,7 +35,7 @@ abstract class Flag<T> {
   /**
    * The mutable reference to the flags value.
    */
-  final T defaultValue;
+  final T value;
 
   /**
    * The flags example values done for guiding.
@@ -45,7 +45,7 @@ abstract class Flag<T> {
   /**
    * Returns the flags value as a formatted string.
    */
-  String getFormatted() => format(defaultValue);
+  String getFormatted() => format(value);
 
   /**
    * Returns the flag example values as formatted strings.
@@ -66,6 +66,8 @@ abstract class Flag<T> {
    */
   String format(T value);
 
+  Flag<T> set(T value);
+
   @override
   int get hashCode => Object.hash(name, description, examples, parse, format);
 
@@ -75,7 +77,7 @@ abstract class Flag<T> {
   }
 
   @override
-  String toString() => format(defaultValue);
+  String toString() => format(value);
 
   /**
    * Syntax message part describing the flag.
@@ -99,11 +101,7 @@ abstract class Flag<T> {
  * A flag that contains a [String] as it's value.
  */
 final class TextFlag extends Flag<String> {
-  const TextFlag({
-    required super.name,
-    super.description,
-    super.defaultValue = "",
-  });
+  const TextFlag({required super.name, super.description, super.value = ""});
 
   String format(String value) => value;
 
@@ -128,6 +126,10 @@ final class TextFlag extends Flag<String> {
     }
     return parsed;
   }
+
+  @override
+  Flag<String> set(String value) =>
+      TextFlag(name: name, description: description, value: value);
 }
 
 /**
@@ -140,9 +142,17 @@ final class BoolFlag extends Flag<bool> {
   const BoolFlag({
     super.shortName,
     required super.name,
-    final bool value = false,
+    super.value = false,
     super.description,
-  }) : super(defaultValue: value);
+  });
   String format(bool value) => value.toString();
-  bool parse(String raw) => raw == "true" ? true : false;
+  bool parse(String raw) => raw == "true" || raw.isEmpty ? true : false;
+
+  @override
+  Flag<bool> set(bool value) => BoolFlag(
+    name: name,
+    shortName: shortName,
+    description: description,
+    value: value,
+  );
 }

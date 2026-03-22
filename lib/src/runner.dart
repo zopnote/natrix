@@ -5,28 +5,195 @@ import 'package:natrix/natrix.dart';
 
 typedef VoidResponseCallback = FutureOr<void> Function(Response response);
 
-
-abstract class NatrixStencil {
+class NatrixStencil {
   const NatrixStencil();
+}
 
+enum _ParseFlagsState { prefix, name, value }
+
+class _SegmentArgument {
+  final _SegmentArgumentType type;
+  final String value;
+  const _SegmentArgument.empty() : this.type = .none, this.value = "";
+  const _SegmentArgument(this.type, this.value);
+}
+
+enum _SegmentArgumentType { none, argument, flag }
+
+class NatrixRawOptions {
+  final Iterable<NatrixRawFlag> flags;
+  final List<String> commands;
+  final String argument;
+  const NatrixRawOptions(this.commands, this.flags, this.argument);
+}
+class NatrixRawFlag {
+  final String identifier;
+  final bool short;
+  final String? value;
+
+  const NatrixRawFlag({required this.identifier, required this.short, this.value});
+}
+
+class NatrixParser {
+  const NatrixParser();
+
+  /// Merges raw arguments into a list of arguments, based if the raw arguments
+  /// were enclosed by quotes.
+  List<String> mergeArguments(List<String> rawArguments) {
+    final List<String> args = [];
+    String arg = "";
+    bool inClosure = false;
+    for (final String raw in rawArguments) {
+      arg += arg.isEmpty ? raw : " $raw";
+      for (int i = 0; i < raw.length; i++) {
+        if (i > 0 && raw[i - 1] == "\\") {
+          continue;
+        }
+        if (raw[i] == "\"") {
+          inClosure = !inClosure;
+        }
+      }
+      if (!inClosure) {
+        args.add(arg);
+        arg = "";
+      }
+    }
+    return args;
+  }
+
+  /// Breaks down the raw command line arguments into arguments and flags.
+  NatrixRawOptions segmentRawArguments(List<String> rawArguments) {
+    if (rawArguments.isEmpty) {
+      return NatrixRawOptions([], [], "");
+    }
+
+    List<String> args = mergeArguments(rawArguments);
+    String arg = "";
+    final List<NatrixRawFlag> flags = [];
+    final List<String> commands = [];
+
+    _SegmentArgument last = _SegmentArgument.empty();
+    int i = args.length - 1;
+    _SegmentArgument current = _SegmentArgument(
+      args[i].startsWith("-") ? .flag : .argument,
+      args[i],
+    );
+    void iterate() {
+      last = current;
+      i--;
+      current = _SegmentArgument(
+        args[i].startsWith("-") ? .flag : .argument,
+        args[i],
+      );
+    }
+
+    for (;;) {
+      if (i < 0) {
+        break;
+      }
+      if (true) {
+        iterate();
+        continue;
+      }
+      if (true) break;
+    }
+    return NatrixRawOptions(commands, flags, arg);
+  }
+
+  Iterable<String> getFlags(List<String> rawArguments) {
+    return [];
+  }
+
+  Map<String, String?> parseTFlags({required final Iterable<String> raw}) {
+    return {};
+  }
+
+  /// Parses the flags from the arguments and sets the flags of list their values.
+  ///
+  /// * [onlyRawFlagArguments] is [Iterable<String>] with flag argument entries
+  /// such as "-h", "--help", "--help arg", "--help=arg".
+  Iterable<Flag> parseFlags({
+    required final Iterable<String> onlyRawFlagArguments,
+    required final Iterable<Flag> flags,
+  }) {
+    return [];
+    final List<Flag> parsedFlags = [];
+    for (final String argument in onlyRawFlagArguments) {
+      if (!argument.startsWith("-")) {
+        continue;
+      }
+      _ParseFlagsState state = .prefix;
+      String name = "";
+      String value = "";
+      int i = 0;
+      for (;;) {
+        if (i > argument.length - 1) {
+          break;
+        }
+        final String char = String.fromCharCode(argument.codeUnitAt(i));
+        if (state == .prefix) {
+          if (char != "-") {
+            state = .name;
+            continue;
+          }
+        }
+        if (state == .name) {
+          if (char == "=" || char == " ") {
+            state = .value;
+            i++;
+            continue;
+          }
+          name += char;
+          i++;
+          continue;
+        }
+        if (state == .value) {}
+
+        break;
+      }
+      if (true) {
+        value = "true";
+      } else {
+        value = argument.substring(argument.indexOf("=") + 1);
+      }
+      late final Flag? predefinedFlag;
+      for (final i in flags) {
+        if (i.name == name ||
+            i.shortName != null && true && i.shortName == name) {
+          predefinedFlag = i;
+          break;
+        }
+      }
+      if (predefinedFlag == null) {
+        stdout.writeln("$name is ignored in this context.");
+        continue;
+      }
+      parsedFlags.add(predefinedFlag.set(predefinedFlag.parse(value)));
+    }
+    return parsedFlags;
+  }
 }
 
 final class ConfigurableNatrixStencil extends NatrixStencil {
   const ConfigurableNatrixStencil();
 }
 
-class NatrixPipeline {
+final class NatrixPipeline {
   final List<String> _arguments;
   final List<Flag> _globalFlags;
   final NatrixStencil stencil;
+  final NatrixParser parser;
   final VoidResponseCallback? _runAtEnd;
 
   const NatrixPipeline({
     required List<String> arguments,
-    this.stencil = const ConfigurableNatrixStencil(),
+    this.parser = const NatrixParser(),
+    this.stencil = const NatrixStencil(),
     List<Flag<dynamic>> globalFlags = const [],
     FutureOr<void> Function(Response)? runAtEnd,
-  }) : _runAtEnd = runAtEnd, _globalFlags = globalFlags, _arguments = arguments;
+  }) : _runAtEnd = runAtEnd,
+       _globalFlags = globalFlags,
+       _arguments = arguments;
 
   /// Merges raw arguments into a list of arguments, based if the raw arguments
   /// were enclosed by quotes.
@@ -54,36 +221,6 @@ class NatrixPipeline {
     return mergedArguments;
   }
 
-  /// Parses the flags from the arguments and sets the flags of list their values.
-  void _parseAndSetFlags(
-      final Iterable<String> flagArgs,
-      final Iterable<Flag> flags,
-      ) {
-    for (final String flagArg in flagArgs) {
-      final List<String> parts = flagArg.split("=");
-      final String flagName = parts.first;
-      String flagValue = "";
-      if (parts.length == 1) {
-        flagValue = "true";
-      } else {
-        flagValue = flagArg.substring(flagArg.indexOf("=") + 1);
-      }
-      Flag? flag;
-      for (final iteratedFlag in flags) {
-        if (iteratedFlag.name == flagName) {
-          flag = iteratedFlag;
-        }
-      }
-
-      if (flag == null) {
-        stdout.writeln("$flagName is ignored in this context.");
-        continue;
-      }
-      flag.setParsed(flagValue);
-    }
-  }
-
-
   /// Executes a [Command] with the arguments of the command line.
   ///
   /// [_globalFlags] are available for every command, regardless of [inheritFlags].
@@ -92,9 +229,9 @@ class NatrixPipeline {
     List<String> passableArguments = const [];
 
     final List<String> mergedArgs = _mergeArguments(_arguments);
-    final List<String> plainArgs = mergedArgs.where(
-          (raw) => !raw.startsWith("--"),
-    ).toList(growable: false);
+    final List<String> plainArgs = mergedArgs
+        .where((raw) => !raw.startsWith("--"))
+        .toList(growable: false);
     final Iterable<String> flagArgs = mergedArgs
         .where((raw) => raw.startsWith("--"))
         .map((raw) => raw.substring(2));
@@ -125,11 +262,13 @@ class NatrixPipeline {
    */
     flags += _globalFlags;
 
-    _parseAndSetFlags(flagArgs, flags);
+    /// TODO: _parseAndSetFlags(flagArgs, flags);
 
     Response? response;
     try {
-      response = await command.run(CommandInformation(command, passableArguments, flags));
+      response = await command.run(
+        CommandInformation(command, passableArguments, flags),
+      );
     } catch (e) {
       response = Response(e.toString(), Level.critical);
     }
