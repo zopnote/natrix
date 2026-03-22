@@ -146,7 +146,7 @@ final class BoolFlag extends Flag<bool> {
     super.description,
   });
   String format(bool value) => value.toString();
-  bool parse(String raw) => raw == "true" || raw.isEmpty ? true : false;
+  bool parse(String raw) => raw != "false" && raw.isNotEmpty;
 
   @override
   Flag<bool> set(bool value) => BoolFlag(

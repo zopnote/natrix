@@ -6,7 +6,7 @@ void main() {
   final NatrixParser parser = NatrixParser();
   test('First Test', () {
     expect(
-      parser.segmentRawArguments([
+      parser.segmentArguments([
         "redeem",
         "code",
         "--newest",
@@ -22,15 +22,15 @@ void main() {
         "AUGUST",
         "2024\\\"\"",
       ]),
-      NatrixRawOptions([
-        "redeem", "code",
+      NatrixOptions([
+        "redeem", "code", "dr3-4Sa-W7c-dF2-1AV:\"SPRING SALE AUGUST 2024\""
       ], [
         NatrixRawFlag(identifier: "newest", short: false),
         NatrixRawFlag(identifier: "account", short: false, value: "Lenny Siebert"),
         NatrixRawFlag(identifier: "password", short: false, value: "tripple 11"),
         NatrixRawFlag(identifier: "f", short: true),
         NatrixRawFlag(identifier: "m", short: true, value: "zopnote@proton.me")
-      ], "dr3-4Sa-W7c-dF2-1AV:\"SPRING SALE AUGUST 2024\""),
+      ]),
     );
   });
 }

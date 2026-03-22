@@ -39,7 +39,7 @@ class Command {
         }
       }
     }
-  }
+  } 
 
   /// The name of this command.
   /// Will be the usage in command line
@@ -85,6 +85,7 @@ class Command {
           useLongest = cmd.use.length;
         }
       }
+      
       for (final Command subCommand in subCommands) {
         if (subCommand.hidden) continue;
         final int space = useLongest + 3 - subCommand.use.length;

@@ -20,18 +20,10 @@ class _SegmentArgument {
 
 enum _SegmentArgumentType { none, argument, flag }
 
-class NatrixRawOptions {
-  final Iterable<NatrixRawFlag> flags;
-  final List<String> commands;
-  final String argument;
-  const NatrixRawOptions(this.commands, this.flags, this.argument);
-}
-class NatrixRawFlag {
-  final String identifier;
-  final bool short;
-  final String? value;
-
-  const NatrixRawFlag({required this.identifier, required this.short, this.value});
+class NatrixOptions {
+  final Iterable<Flag> flags;
+  final List<String> arguments;
+  const NatrixOptions(this.arguments, this.flags);
 }
 
 class NatrixParser {
@@ -62,42 +54,31 @@ class NatrixParser {
   }
 
   /// Breaks down the raw command line arguments into arguments and flags.
-  NatrixRawOptions segmentRawArguments(List<String> rawArguments) {
-    if (rawArguments.isEmpty) {
-      return NatrixRawOptions([], [], "");
+  NatrixOptions parseArguments(
+    List<String> arguments,
+    Iterable<Flag> registeredFlags,
+  ) {
+    if (arguments.isEmpty) {
+      return NatrixOptions([], []);
     }
 
-    List<String> args = mergeArguments(rawArguments);
+    List<String> args = mergeArguments(arguments);
     String arg = "";
-    final List<NatrixRawFlag> flags = [];
-    final List<String> commands = [];
+    final Iterable<Flag> flags = [];
+    final List<String> options = [];
 
-    _SegmentArgument last = _SegmentArgument.empty();
-    int i = args.length - 1;
-    _SegmentArgument current = _SegmentArgument(
-      args[i].startsWith("-") ? .flag : .argument,
-      args[i],
-    );
-    void iterate() {
-      last = current;
-      i--;
-      current = _SegmentArgument(
-        args[i].startsWith("-") ? .flag : .argument,
-        args[i],
-      );
-    }
-
-    for (;;) {
-      if (i < 0) {
-        break;
-      }
-      if (true) {
-        iterate();
+    for (int i = 0; i < args.length - 1; i++) {
+      final String last = i > 0 ? args[i - 1] : "";
+      final String current = args[i];
+      if (!last.startsWith("-") && !current.startsWith("-")) {
+        options.add(current);
         continue;
       }
-      if (true) break;
+      if () {
+
+      }
     }
-    return NatrixRawOptions(commands, flags, arg);
+    return NatrixOptions(options, flags, arg);
   }
 
   Iterable<String> getFlags(List<String> rawArguments) {
