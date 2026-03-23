@@ -11,7 +11,7 @@ final class NatrixPipeline {
   const NatrixPipeline({
     required List<String> arguments,
     this.parser = const NatrixParser(),
-    this.stencil = const NatrixTheme(),
+    this.stencil = const NatrixDefaultTheme(),
     List<Flag<dynamic>> globalFlags = const [],
   }) : _globalFlags = globalFlags,
        _arguments = arguments;

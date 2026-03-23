@@ -8,7 +8,9 @@ abstract class NatrixTheme {
   Stencil flagSyntax();
 }
 
-class NatrixDefaultTheme extends NatrixTheme {}
+class NatrixDefaultTheme extends NatrixTheme {
+  const NatrixDefaultTheme();
+}
 
 class FlagStencil extends Stencil {
   @override
