@@ -1,3 +1,4 @@
+
 /**
  * A flag is the base representation of a property given at the command line.
  *
@@ -7,7 +8,7 @@
 abstract class Flag<T> {
   const Flag({
     required this.name,
-    this.shortName,
+    this.short,
     required this.value,
     this.examples = const [],
     this.description = "",
@@ -23,7 +24,7 @@ abstract class Flag<T> {
    * A shortage of the flags name, that have to be referenced
    * when typing in the command line.
    */
-  final String? shortName;
+  final String? short;
 
   /**
    * Description of the flag, explaining the purpose of the property.
@@ -101,35 +102,34 @@ abstract class Flag<T> {
  * A flag that contains a [String] as it's value.
  */
 final class TextFlag extends Flag<String> {
-  const TextFlag({required super.name, super.description, super.value = ""});
+  const TextFlag({required super.name, super.short, super.description, super.value = ""});
 
   String format(String value) => value;
 
   String parse(String raw) {
-    final List<int> deletable = const [];
-    for (int i = 0; i < raw.length - 1; i++) {
-      if (raw.codeUnitAt(i) != '"') {
+    String o = "";
+    int n = 0;
+    for (int i = 0; i < raw.length; i++) {
+      if (raw[i] != "\"") {
+        o += raw[i];
+        n++;
         continue;
       }
-      if (i == 0) {
-        deletable.add(i);
+      if (i < 1) {
         continue;
       }
-      if (raw.codeUnitAt(i - 1) != '\\') {
-        deletable.add(i);
+      if (raw[i - 1] != "\\") {
+        continue;
       }
-      deletable.add(i - 1);
+      o = o.substring(0, n - 1);
+      o += raw[i];
     }
-    String parsed = raw;
-    for (final int i in deletable) {
-      parsed = parsed.substring(0, i) + parsed.substring(i);
-    }
-    return parsed;
+    return o;
   }
 
   @override
   Flag<String> set(String value) =>
-      TextFlag(name: name, description: description, value: value);
+      TextFlag(name: name, short: short, description: description, value: value);
 }
 
 /**
@@ -140,18 +140,18 @@ final class TextFlag extends Flag<String> {
  */
 final class BoolFlag extends Flag<bool> {
   const BoolFlag({
-    super.shortName,
+    super.short,
     required super.name,
     super.value = false,
     super.description,
   });
   String format(bool value) => value.toString();
-  bool parse(String raw) => raw != "false" && raw.isNotEmpty;
+  bool parse(String raw) => raw != "false" || raw.isEmpty;
 
   @override
   Flag<bool> set(bool value) => BoolFlag(
     name: name,
-    shortName: shortName,
+    short: short,
     description: description,
     value: value,
   );

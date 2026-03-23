@@ -16,7 +16,7 @@ class Command {
   /// A command is an action, callable inside the cli.
   Command({
     this.use = "",
-    required this.short,
+    required this.intro,
     required this.description,
     required this.run,
     this.inheritFlags = false,
@@ -26,14 +26,17 @@ class Command {
   }) {
     for (final Flag flag in flags) {
       for (final Flag other in flags) {
+        if (other == flag) {
+          return;
+        }
         final bool sameShort =
-            flag.shortName != null && flag.shortName == other.shortName;
+            flag.short != null && flag.short == other.short;
         final bool sameName = flag.name == other.name;
         if (sameShort || sameName) {
           throw Exception(
             "You cannot use the same identifier twice inside a single flags tree."
             " The identifier "
-            "${[sameName ? flag.name : "", sameShort ? flag.shortName : ""].join(", ")} "
+            "${[sameName ? flag.name : "", sameShort ? flag.short : ""].join(", ")} "
             "occurred twice.",
           );
         }
@@ -47,9 +50,9 @@ class Command {
   /// Maximal length of 15 characters.
   final String use;
 
-  /// A short description of the command and
+  /// An introduction description of the command and
   /// it's functionality for guidance and documentation.
-  final String short;
+  final String intro;
 
   /// A long description of the command and
   /// it's functionality for guidance and documentation.
@@ -68,7 +71,7 @@ class Command {
   final List<Command> subCommands;
 
   /// Execution function invoked with the parsed context.
-  final FutureOr<Response> Function(CommandInformation context) run;
+  final FutureOr<Response> Function(NatrixInformation info) run;
 
   /// Returns a help message describing the
   /// usage of the command and it's available flags.
@@ -107,12 +110,12 @@ class Command {
 }
 
 /// Information about the context of execution of a command line prompt.
-final class CommandInformation {
+final class NatrixInformation {
   final Command command;
   final List<String> arguments;
-  final List<Flag> flags;
+  final Iterable<Flag> flags;
 
-  CommandInformation(this.command, this.arguments, this.flags);
+  const NatrixInformation(this.command, this.arguments, this.flags);
 
   /// Returns a help message describing usage and available flags.
   String formatSyntax() {
@@ -135,7 +138,7 @@ final class CommandInformation {
   /// Retrieves a flag by name and casts it to type T.
   ///
   /// Throws [Exception] if flag is not found.
-  static Flag<T> _getFlagOfList<T>(final List<Flag> flags, final String name) {
+  static Flag<T> _getFlagOfList<T>(final Iterable<Flag> flags, final String name) {
     for (final Flag flag in flags) {
       if (flag.name == name) {
         return flag as Flag<T>;
