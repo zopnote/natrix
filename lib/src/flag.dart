@@ -1,76 +1,71 @@
+import 'package:meta/meta.dart';
 
-/**
- * A flag is the base representation of a property given at the command line.
- *
- * It is intended to be extended for every special use case to deliver formatting
- * and parsing.
- */
-abstract class Flag<T> {
-  const Flag({
-    required this.name,
-    this.short,
+extension NatrixIterableFlagExtension on Iterable<NatrixFlag> {
+  NatrixFlag<T> get<T>(String name) {
+    for (final f in this) {
+      if (f.id == name) {
+        return f as NatrixFlag<T>;
+      }
+    }
+    throw Exception(
+      "There isn't a flag found with the name \"$name\" in the given list.",
+    );
+  }
+}
+
+@immutable
+class NatrixChar {
+  final String c;
+  NatrixChar(this.c) {
+    if (c.length > 1) {
+      throw Exception("A character cannot be longer than 1 unit.");
+    }
+  }
+
+  @override
+  bool operator ==(Object other) => c == other;
+
+  String operator *(int times) => c * times;
+
+  String operator +(String other) => c + other;
+
+  @override
+  String toString() => c;
+}
+
+abstract class NatrixFlag<T> {
+  const NatrixFlag({
+    required this.id,
+    this.acronym,
     required this.value,
     this.examples = const [],
-    this.description = "",
+    this.tooltip = "",
   });
 
-  /**
-   * The name of the flag, that have to be referenced
-   * when typing in the command line.
-   */
-  final String name;
+  final String id;
 
-  /**
-   * A shortage of the flags name, that have to be referenced
-   * when typing in the command line.
-   */
-  final String? short;
+  final NatrixChar? acronym;
 
-  /**
-   * Description of the flag, explaining the purpose of the property.
-   *
-   * It will be displayed as part of the help/syntax message.
-   */
-  final String description;
+  final String tooltip;
 
-  /**
-   * The mutable reference to the flags value.
-   */
   final T value;
 
-  /**
-   * The flags example values done for guiding.
-   */
   final List<T> examples;
 
-  /**
-   * Returns the flags value as a formatted string.
-   */
   String getFormatted() => format(value);
 
-  /**
-   * Returns the flag example values as formatted strings.
-   * If the examples are empty an empty list is returned.
-   */
   List<String> getExamplesFormatted() =>
       examples.map<String>((example) => format(example)).toList();
 
-  /**
-   * Parses a string into the flags value type.
-   * Returns the parsed value.
-   */
   T parse(String raw);
 
-  /**
-   * Formats the flags value into a string,
-   * that can be parsed by the Flag's [parse] function.
-   */
   String format(T value);
 
-  Flag<T> set(T value);
+  NatrixFlag<T> set(T value);
 
   @override
-  int get hashCode => Object.hash(name, description, examples, parse, format);
+  int get hashCode =>
+      Object.hash(id, tooltip, examples, parse, format);
 
   @override
   bool operator ==(Object other) {
@@ -80,16 +75,11 @@ abstract class Flag<T> {
   @override
   String toString() => format(value);
 
-  /**
-   * Syntax message part describing the flag.
-   *
-   * Used as part of [Command.syntaxMessage()].
-   */
   String syntaxString({final int spacer = 13}) {
-    String syntax = "--${name}";
-    final int space = spacer - name.length;
-    if (description.isNotEmpty) {
-      syntax = syntax + (" " * space) + "${description}";
+    String syntax = "--${id}";
+    final int space = spacer - id.length;
+    if (tooltip.isNotEmpty) {
+      syntax = syntax + (" " * space) + "${tooltip}";
     }
     if (examples.isNotEmpty) {
       syntax = syntax + " (examples: ${getExamplesFormatted().join(", ")})";
@@ -98,11 +88,13 @@ abstract class Flag<T> {
   }
 }
 
-/**
- * A flag that contains a [String] as it's value.
- */
-final class TextFlag extends Flag<String> {
-  const TextFlag({required super.name, super.short, super.description, super.value = ""});
+final class NatrixTextFlag extends NatrixFlag<String> {
+  const NatrixTextFlag({
+    required super.id,
+    super.acronym,
+    super.tooltip,
+    super.value = "",
+  });
 
   String format(String value) => value;
 
@@ -128,31 +120,29 @@ final class TextFlag extends Flag<String> {
   }
 
   @override
-  Flag<String> set(String value) =>
-      TextFlag(name: name, short: short, description: description, value: value);
+  NatrixFlag<String> set(String value) => NatrixTextFlag(
+    id: id,
+    acronym: acronym,
+    tooltip: tooltip,
+    value: value,
+  );
 }
 
-/**
- * A flag representing a boolean value.
- *
- * Whenever the flag is provided in command line,
- * it is interpreted as true, even without specifying it directly.
- */
-final class BoolFlag extends Flag<bool> {
-  const BoolFlag({
-    super.short,
-    required super.name,
+final class NatrixBoolFlag extends NatrixFlag<bool> {
+  const NatrixBoolFlag({
+    super.acronym,
+    required super.id,
     super.value = false,
-    super.description,
+    super.tooltip,
   });
   String format(bool value) => value.toString();
   bool parse(String raw) => raw != "false" || raw.isEmpty;
 
   @override
-  Flag<bool> set(bool value) => BoolFlag(
-    name: name,
-    short: short,
-    description: description,
+  NatrixFlag<bool> set(bool value) => NatrixBoolFlag(
+    id: id,
+    acronym: acronym,
+    tooltip: tooltip,
     value: value,
   );
 }

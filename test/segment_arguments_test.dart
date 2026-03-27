@@ -1,5 +1,5 @@
-import 'package:natrix/natrix.dart' show TextFlag;
-import 'package:natrix/src/flag.dart' show BoolFlag;
+import 'package:natrix/natrix.dart' show NatrixTextFlag, NatrixChar;
+import 'package:natrix/src/flag.dart' show NatrixBoolFlag;
 import 'package:natrix/src/parser.dart' show NatrixParser, NatrixOptions;
 import 'package:test/test.dart';
 
@@ -7,9 +7,9 @@ extension SerializeNatrixOptionsExtension on NatrixOptions {
   Map<String, dynamic> toJson() => {
     "flags": flags.map(
       (flag) => {
-        "name": flag.name,
-        "short": flag.short,
-        "description": flag.description,
+        "name": flag.id,
+        "acronym": flag.acronym,
+        "description": flag.tooltip,
         "examples": flag.examples,
         "value": flag.value,
       },
@@ -40,21 +40,25 @@ void main() {
           "2024\\\"\"",
         ]),
         [
-          BoolFlag(name: "newest"),
-          TextFlag(name: "account"),
-          TextFlag(name: "password"),
-          BoolFlag(name: "force", short: "f"),
-          TextFlag(name: "mail", short: "m"),
+          NatrixBoolFlag(id: "newest"),
+          NatrixTextFlag(id: "account"),
+          NatrixTextFlag(id: "password"),
+          NatrixBoolFlag(id: "force", acronym: NatrixChar("f")),
+          NatrixTextFlag(id: "mail", acronym: NatrixChar("m")),
         ],
       ).toJson(),
       NatrixOptions(
         ["redeem", "code", "dr3-4Sa-W7c-dF2-1AV:\"SPRING SALE AUGUST 2024\""],
         [
-          BoolFlag(name: "newest", value: true),
-          TextFlag(name: "account", value: "Lenny Siebert"),
-          TextFlag(name: "password", value: "tripple 11"),
-          BoolFlag(name: "force", short: "f", value: true),
-          TextFlag(name: "mail", short: "m", value: "zopnote@proton.me"),
+          NatrixBoolFlag(id: "newest", value: true),
+          NatrixTextFlag(id: "account", value: "Lenny Siebert"),
+          NatrixTextFlag(id: "password", value: "tripple 11"),
+          NatrixBoolFlag(id: "force", acronym: NatrixChar("f"), value: true),
+          NatrixTextFlag(
+            id: "mail",
+            acronym: NatrixChar("m"),
+            value: "zopnote@proton.me",
+          ),
         ],
       ).toJson(),
     );

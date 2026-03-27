@@ -21,12 +21,9 @@ String _simpleStringReduction(String raw) {
   return o;
 }
 
-
 class NatrixParser {
   const NatrixParser();
 
-  /// Merges raw arguments into a list of arguments, based if the raw arguments
-  /// were enclosed by quotes.
   List<String> mergeArguments(List<String> rawArguments) {
     final List<String> args = [];
     String arg = "";
@@ -59,14 +56,14 @@ class NatrixParser {
     );
   }
 
-  Iterable<Flag> parseFlags(
-      final List<String> mergedArguments,
-      final Iterable<Flag> predefinedFlags,
-      ) {
+  Iterable<NatrixFlag> parseFlags(
+    final List<String> mergedArguments,
+    final Iterable<NatrixFlag> predefinedFlags,
+  ) {
     final List<String> args = mergedArguments;
-    final List<Flag> flags = [];
+    final List<NatrixFlag> flags = [];
 
-    for (Flag f in predefinedFlags) {
+    for (NatrixFlag f in predefinedFlags) {
       NatrixParserRawFlag? raw;
 
       for (int i = 0; i < args.length; i++) {
@@ -74,14 +71,15 @@ class NatrixParser {
           continue;
         }
         final NatrixParserRawFlag r = createRawFlag(args[i]);
-        if (r.isShort ? f.short != r.id : f.name != r.id) {
+        if (r.isShort ? f.acronym != r.id : f.id != r.id) {
           continue;
         }
-        if (f is BoolFlag || r.val.isNotEmpty) {
+        if (f is NatrixBoolFlag || r.val.isNotEmpty) {
           raw = r;
           break;
         }
-        final String e = "The flag with the identifier \"$r\" requires a value.";
+        final String e =
+            "The flag with the identifier \"$r\" requires a value.";
         if (i >= args.length - 1) {
           throw Exception(e);
         }
@@ -101,11 +99,10 @@ class NatrixParser {
     return flags;
   }
 
-  /// Breaks down the raw command line arguments into arguments and flags.
   NatrixOptions parseOptions(
-      final List<String> mergedArguments,
-      final Iterable<Flag> predefinedFlags,
-      ) {
+    final List<String> mergedArguments,
+    final Iterable<NatrixFlag> predefinedFlags,
+  ) {
     final List<String> options = [];
     final List<String> args = mergedArguments;
     int i = 0;
@@ -119,8 +116,8 @@ class NatrixParser {
         continue;
       }
       final NatrixParserRawFlag r = createRawFlag(args[i]);
-      final Flag? flag = predefinedFlags.firstWhereOrNull(
-            (f) => r.isShort ? f.short == r.id : f.name == r.id,
+      final NatrixFlag? flag = predefinedFlags.firstWhereOrNull(
+        (f) => r.isShort ? f.acronym == r.id : f.id == r.id,
       );
       if (flag == null) {
         throw Exception(
@@ -142,7 +139,7 @@ class NatrixParser {
 }
 
 class NatrixOptions {
-  final Iterable<Flag> flags;
+  final Iterable<NatrixFlag> flags;
   final List<String> arguments;
   const NatrixOptions([this.arguments = const [], this.flags = const []]);
 }
@@ -151,12 +148,20 @@ class NatrixParserRawFlag {
   final String id;
   final String val;
   final bool isShort;
+
   const NatrixParserRawFlag(this.id, this.val, this.isShort);
+
   NatrixParserRawFlag set(String val) => NatrixParserRawFlag(id, val, isShort);
+
   @override
   String toString() => id;
-}
 
+  @override
+  int get hashCode => super.hashCode;
+
+  @override
+  bool operator ==(Object other) => identical(other, this);
+}
 
 extension IterableFirstWhereOrNullExtension<T> on Iterable<T> {
   T? firstWhereOrNull(bool Function(T element) test) {
