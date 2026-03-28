@@ -1,5 +1,7 @@
 import 'dart:io' as io show stdout, stderr, stdin;
 
+import 'package:natrix/natrix.dart';
+
 class NatrixMount {
   final int position;
   final NatrixOutput output;
@@ -149,6 +151,21 @@ class NatrixText {
       !RegExp(r'\x1B$$[0-9;]*[^m]').hasMatch(text) &&
       !text.contains("\n") &&
       !text.contains("\r");
+
+  List<NatrixText> wrap(final int maxLength) {
+    final double a = ansi.length / maxLength;
+    if (a.round() < 1.0) {
+      return [this];
+    }
+    final List<NatrixText> texts = [];
+    String b = ansi;
+    for (int i = 0; i < a.round(); i++) {
+      final String c = b.cut(0, maxLength);
+      texts.add(NatrixText(c));
+      b = b.cut(maxLength);
+    }
+    return texts;
+  }
 
   @override
   String toString() => ansi;

@@ -136,6 +136,7 @@ final NatrixCommand clang = NatrixCommand(
     ),
   ],
   callback: (self, arguments, flags) {},
+  id: "clang_cli",
 );
 
 Future<void> main(List<String> args) async {

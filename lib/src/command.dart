@@ -76,6 +76,8 @@ typedef NatrixCommandCallback =
 @immutable
 class NatrixCommand {
 
+  final NatrixCommand? parent;
+
   /**
    * The token matched against a positional argument during pipeline traversal.
    *
@@ -127,7 +129,7 @@ class NatrixCommand {
    * child. Unreachable commands (not listed here) cannot be triggered
    * through standard pipeline execution.
    */
-  final List<NatrixCommand> children;
+  final Iterable<NatrixCommand> children;
 
   /**
    * The function executed when this command is selected as the final
@@ -138,6 +140,7 @@ class NatrixCommand {
   final NatrixCommandCallback callback;
 
   const NatrixCommand._internal({
+    this.parent,
     required this.id,
     required this.tooltip,
     required this.description,
@@ -165,7 +168,7 @@ class NatrixCommand {
    * [NatrixFlag.id] or [NatrixFlag.acronym].
    */
   factory NatrixCommand.new({
-    final String id = "",
+    required final String id,
     String? tooltip,
     required final String description,
     required final NatrixCommandCallback callback,
@@ -201,46 +204,17 @@ class NatrixCommand {
     );
   }
 
-  /**
-   * Renders a human-readable syntax reference for this command.
-   *
-   * The output begins with [description]. If [children] is non-empty an
-   * "Available commands:" section follows, listing every non-[hidden] child
-   * with identifiers padded to the length of the longest child [id]. When
-   * [withFlags] is `true` and [flags] is non-empty a "Command avertable
-   * flags:" section is appended, delegating to [NatrixFlag.syntaxString]
-   * for each entry.
-   *
-   * [spacer] controls the column width reserved for flag identifiers and
-   * is forwarded to [NatrixFlag.syntaxString]. Defaults to `13`.
-   */
-  String formatSyntax({final bool withFlags = true, final int spacer = 13}) {
-    String syntax = "$description\n";
-    if (children.isNotEmpty) {
-      syntax = "$syntax\nAvailable commands:\n";
-      int useLongest = 0;
-      for (final NatrixCommand cmd in children) {
-        if (cmd.id.length > useLongest) {
-          useLongest = cmd.id.length;
-        }
-      }
-
-      for (final NatrixCommand subCommand in children) {
-        if (subCommand.hidden) continue;
-        final int space = useLongest + 3 - subCommand.id.length;
-        syntax =
-            "$syntax${subCommand.id}${" " * space}${subCommand.description}\n";
-      }
-    }
-    if (flags.isNotEmpty && withFlags) {
-      syntax += "\nCommand avertable flags:\n";
-      for (final NatrixFlag flag in flags) {
-        syntax += "${flag.syntaxString(spacer: spacer)}\n";
-      }
-    }
-    if (flags.isEmpty && children.isEmpty && !withFlags) {
-      syntax += "\n";
-    }
-    return syntax;
-  }
+  bool hasParent() => parent != null;
+  NatrixCommand withParent(final NatrixCommand parent) =>
+      NatrixCommand._internal(
+        parent: parent,
+        id: id,
+        tooltip: tooltip,
+        description: description,
+        hidden: hidden,
+        inheritFlags: inheritFlags,
+        flags: flags,
+        children: children,
+        callback: callback,
+      );
 }

@@ -74,18 +74,6 @@ abstract class NatrixFlag<T> {
 
   @override
   String toString() => format(value);
-
-  String syntaxString({final int spacer = 13}) {
-    String syntax = "--${id}";
-    final int space = spacer - id.length;
-    if (tooltip.isNotEmpty) {
-      syntax = syntax + (" " * space) + "${tooltip}";
-    }
-    if (examples.isNotEmpty) {
-      syntax = syntax + " (examples: ${getExamplesFormatted().join(", ")})";
-    }
-    return syntax;
-  }
 }
 
 final class NatrixTextFlag extends NatrixFlag<String> {

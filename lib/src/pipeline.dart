@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:natrix/natrix.dart';
-import 'package:natrix/src/writer.dart';
 
 final class NatrixPipeline {
   final List<String> _arguments;
@@ -13,9 +12,9 @@ final class NatrixPipeline {
     required List<String> arguments,
     this.parser = const NatrixParser(),
     final NatrixTheme? theme,
-    List<NatrixFlag<dynamic>> globalFlags = const [],
+    List<NatrixFlag> globalFlags = const [],
   }) : _global = globalFlags,
-       this.theme = theme ?? NatrixDefaultTheme.at(NatrixStdio()),
+       this.theme = theme ?? NatrixDefaultTheme(),
        _arguments = arguments;
 
   Future<void> run(NatrixCommand command) async {
@@ -31,7 +30,7 @@ final class NatrixPipeline {
       for (final NatrixCommand s in c.children) {
         found = s.id == args.elementAtOrNull(i);
         if (found) {
-          c = s;
+          c = s.withParent(c);
           i++;
           break;
         }
