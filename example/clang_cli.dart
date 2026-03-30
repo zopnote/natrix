@@ -1,4 +1,4 @@
-import 'package:natrix/natrix.dart';
+import 'package:natrix/core.dart';
 
 final NatrixCommand clang = NatrixCommand(
   // A root command doesn't require an identifier.
@@ -76,7 +76,8 @@ final NatrixCommand clang = NatrixCommand(
       // self is required to refer back to the command. E.g. for Syntax
       // messages. To see more about these
       // parameters look inside the NatrixPipeline.
-      callback: (self, arguments, flags) {},
+      callback: (options) {
+      },
     ),
     NatrixCommand(
       id: "link",
@@ -104,7 +105,9 @@ final NatrixCommand clang = NatrixCommand(
           tooltip: "Produce a shared library instead of an executable.",
         ),
       ],
-      callback: (self, arguments, flags) {},
+      callback: (options) {
+
+      },
     ),
     NatrixCommand(
       // An command can also be hidden. In the default implementation
@@ -132,10 +135,10 @@ final NatrixCommand clang = NatrixCommand(
           tooltip: "Print formatted output without modifying any files.",
         ),
       ],
-      callback: (self, arguments, flags) {},
+      callback: (options) {},
     ),
   ],
-  callback: (self, arguments, flags) {},
+  callback: (options) {options.theme;},
   id: "clang_cli",
 );
 

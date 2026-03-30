@@ -1,37 +1,4 @@
-import 'package:meta/meta.dart';
-
-extension NatrixIterableFlagExtension on Iterable<NatrixFlag> {
-  NatrixFlag<T> get<T>(String name) {
-    for (final f in this) {
-      if (f.id == name) {
-        return f as NatrixFlag<T>;
-      }
-    }
-    throw Exception(
-      "There isn't a flag found with the name \"$name\" in the given list.",
-    );
-  }
-}
-
-@immutable
-class NatrixChar {
-  final String c;
-  NatrixChar(this.c) {
-    if (c.length > 1) {
-      throw Exception("A character cannot be longer than 1 unit.");
-    }
-  }
-
-  @override
-  bool operator ==(Object other) => c == other;
-
-  String operator *(int times) => c * times;
-
-  String operator +(String other) => c + other;
-
-  @override
-  String toString() => c;
-}
+import 'package:natrix/src/core/text.dart' show NatrixChar;
 
 abstract class NatrixFlag<T> {
   const NatrixFlag({
@@ -64,8 +31,7 @@ abstract class NatrixFlag<T> {
   NatrixFlag<T> set(T value);
 
   @override
-  int get hashCode =>
-      Object.hash(id, tooltip, examples, parse, format);
+  int get hashCode => Object.hash(id, tooltip, examples, parse, format);
 
   @override
   bool operator ==(Object other) {
@@ -108,12 +74,8 @@ final class NatrixTextFlag extends NatrixFlag<String> {
   }
 
   @override
-  NatrixFlag<String> set(String value) => NatrixTextFlag(
-    id: id,
-    acronym: acronym,
-    tooltip: tooltip,
-    value: value,
-  );
+  NatrixFlag<String> set(String value) =>
+      NatrixTextFlag(id: id, acronym: acronym, tooltip: tooltip, value: value);
 }
 
 final class NatrixBoolFlag extends NatrixFlag<bool> {
@@ -127,10 +89,6 @@ final class NatrixBoolFlag extends NatrixFlag<bool> {
   bool parse(String raw) => raw != "false" || raw.isEmpty;
 
   @override
-  NatrixFlag<bool> set(bool value) => NatrixBoolFlag(
-    id: id,
-    acronym: acronym,
-    tooltip: tooltip,
-    value: value,
-  );
+  NatrixFlag<bool> set(bool value) =>
+      NatrixBoolFlag(id: id, acronym: acronym, tooltip: tooltip, value: value);
 }

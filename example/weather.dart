@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'package:natrix/natrix.dart';
-import 'package:natrix/src/writer.dart';
+
+import 'package:natrix/io.dart';
 
 const List<String> spin = ["⣄", "⠇", "⠋", "⠙", "⠸", "⣠"];
 final NatrixChar block = NatrixChar('▓');

@@ -1,4 +1,4 @@
-import 'package:natrix/src/parser.dart' show NatrixParser;
+import 'package:natrix/src/core/parser.dart' show NatrixParser;
 import 'package:test/test.dart';
 
 void main() {

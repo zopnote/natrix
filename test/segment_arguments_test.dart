@@ -1,9 +1,9 @@
-import 'package:natrix/natrix.dart' show NatrixTextFlag, NatrixChar;
-import 'package:natrix/src/flag.dart' show NatrixBoolFlag;
-import 'package:natrix/src/parser.dart' show NatrixParser, NatrixOptions;
+import 'package:natrix/core.dart' show NatrixTextFlag, NatrixChar;
+import 'package:natrix/src/core/flag.dart' show NatrixBoolFlag;
+import 'package:natrix/src/core/parser.dart' show NatrixParser, NatrixParserOutput;
 import 'package:test/test.dart';
 
-extension SerializeNatrixOptionsExtension on NatrixOptions {
+extension SerializeNatrixOptionsExtension on NatrixParserOutput {
   Map<String, dynamic> toJson() => {
     "flags": flags.map(
       (flag) => {
@@ -22,7 +22,7 @@ void main() {
   final NatrixParser parser = NatrixParser();
   test('First Test', () {
     expect(
-      parser.parseOptions(
+      parser.parse(
         parser.mergeArguments([
           "redeem",
           "code",
@@ -47,7 +47,7 @@ void main() {
           NatrixTextFlag(id: "mail", acronym: NatrixChar("m")),
         ],
       ).toJson(),
-      NatrixOptions(
+      NatrixParserOutput(
         ["redeem", "code", "dr3-4Sa-W7c-dF2-1AV:\"SPRING SALE AUGUST 2024\""],
         [
           NatrixBoolFlag(id: "newest", value: true),

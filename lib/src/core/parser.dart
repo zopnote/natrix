@@ -1,24 +1,32 @@
-import 'package:natrix/natrix.dart';
 
-String _simpleStringReduction(String raw) {
-  String o = "";
-  int n = 0;
-  for (int i = 0; i < raw.length; i++) {
-    if (raw[i] != "\"") {
-      o += raw[i];
-      n++;
-      continue;
-    }
-    if (i < 1) {
-      continue;
-    }
-    if (raw[i - 1] != "\\") {
-      continue;
-    }
-    o = o.substring(0, n - 1);
-    o += raw[i];
-  }
-  return o;
+import 'package:natrix/src/core/flag.dart' show NatrixFlag, NatrixBoolFlag;
+import 'package:natrix/src/core/misc.dart' show IterableFirstWhereOrNullExtension, simpleStringReduction;
+
+
+
+class NatrixParserFlag {
+  final String id;
+  final String val;
+  final bool isShort;
+
+  const NatrixParserFlag(this.id, this.val, this.isShort);
+
+  NatrixParserFlag set(String val) => NatrixParserFlag(id, val, isShort);
+
+  @override
+  String toString() => id;
+
+  @override
+  int get hashCode => super.hashCode;
+
+  @override
+  bool operator ==(Object other) => identical(other, this);
+}
+
+class NatrixParserOutput {
+  final Iterable<NatrixFlag> flags;
+  final List<String> arguments;
+  const NatrixParserOutput([this.arguments = const [], this.flags = const []]);
 }
 
 class NatrixParser {
@@ -46,10 +54,10 @@ class NatrixParser {
     return args;
   }
 
-  NatrixParserRawFlag createRawFlag(String raw, [String? val]) {
+  NatrixParserFlag parseRawFlag(String raw, [String? val]) {
     final List<String> parts = raw.split("=");
     final bool isShort = !raw.startsWith("--") && raw.startsWith("-");
-    return NatrixParserRawFlag(
+    return NatrixParserFlag(
       parts.first.substring(isShort ? 1 : 2),
       val ?? (parts.length > 1 ? parts.last : ""),
       !raw.startsWith("--") && raw.startsWith("-"),
@@ -64,13 +72,13 @@ class NatrixParser {
     final List<NatrixFlag> flags = [];
 
     for (NatrixFlag f in predefinedFlags) {
-      NatrixParserRawFlag? raw;
+      NatrixParserFlag? raw;
 
       for (int i = 0; i < args.length; i++) {
         if (!args[i].startsWith("-")) {
           continue;
         }
-        final NatrixParserRawFlag r = createRawFlag(args[i]);
+        final NatrixParserFlag r = parseRawFlag(args[i]);
         if (r.isShort ? f.acronym != r.id : f.id != r.id) {
           continue;
         }
@@ -99,7 +107,7 @@ class NatrixParser {
     return flags;
   }
 
-  NatrixOptions parseOptions(
+  NatrixParserOutput parse(
     final List<String> mergedArguments,
     final Iterable<NatrixFlag> predefinedFlags,
   ) {
@@ -111,11 +119,11 @@ class NatrixParser {
         break;
       }
       if (!args[i].startsWith("-")) {
-        options.add(_simpleStringReduction(args[i]));
+        options.add(simpleStringReduction(args[i]));
         i++;
         continue;
       }
-      final NatrixParserRawFlag r = createRawFlag(args[i]);
+      final NatrixParserFlag r = parseRawFlag(args[i]);
       final NatrixFlag? flag = predefinedFlags.firstWhereOrNull(
         (f) => r.isShort ? f.acronym == r.id : f.id == r.id,
       );
@@ -134,42 +142,9 @@ class NatrixParser {
       }
       i++;
     }
-    return NatrixOptions(options, parseFlags(mergedArguments, predefinedFlags));
-  }
-}
-
-class NatrixOptions {
-  final Iterable<NatrixFlag> flags;
-  final List<String> arguments;
-  const NatrixOptions([this.arguments = const [], this.flags = const []]);
-}
-
-class NatrixParserRawFlag {
-  final String id;
-  final String val;
-  final bool isShort;
-
-  const NatrixParserRawFlag(this.id, this.val, this.isShort);
-
-  NatrixParserRawFlag set(String val) => NatrixParserRawFlag(id, val, isShort);
-
-  @override
-  String toString() => id;
-
-  @override
-  int get hashCode => super.hashCode;
-
-  @override
-  bool operator ==(Object other) => identical(other, this);
-}
-
-extension IterableFirstWhereOrNullExtension<T> on Iterable<T> {
-  T? firstWhereOrNull(bool Function(T element) test) {
-    for (final element in this) {
-      if (test(element)) {
-        return element;
-      }
-    }
-    return null;
+    return NatrixParserOutput(
+      options,
+      parseFlags(mergedArguments, predefinedFlags),
+    );
   }
 }

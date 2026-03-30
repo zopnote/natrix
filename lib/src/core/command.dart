@@ -1,13 +1,12 @@
-import 'dart:async';
+import 'dart:async' show FutureOr;
 
-import 'package:meta/meta.dart';
+import 'package:meta/meta.dart' show immutable;
 
-import 'package:natrix/natrix.dart';
+import 'package:natrix/src/core/flag.dart' show NatrixFlag;
+import 'package:natrix/src/core/pipeline.dart'
+    show NatrixPipeline, NatrixCallbackOptions;
 
-extension NatrixStringCutExtension on String {
-  String cut(int start, [int? end]) =>
-      this.substring(start, (end ?? length).clamp(0, length));
-}
+import 'package:natrix/src/core/misc.dart' show NatrixStringCutExtension;
 
 /**
  * Callback signature invoked when a [NatrixCommand] is selected during
@@ -15,17 +14,13 @@ extension NatrixStringCutExtension on String {
  *
  * Receives the resolved [NatrixCommand] instance as [self], the positional [arguments] remaining after flag tokens have
  * been consumed, and the fully parsed [flags] collection whose values
- * can be retrieved via [NatrixIterableFlagExtension.get].
+ * can be retrieved via [NatrixIterableFlagExtension.getFlag].
  *
  * Returns [FutureOr<void>] so that both synchronous and asynchronous
  * implementations are accepted without adaptation.
  */
 typedef NatrixCommandCallback =
-    FutureOr<void> Function(
-      NatrixCommand self,
-      List<String> arguments,
-      Iterable<NatrixFlag> flags,
-    );
+    FutureOr<void> Function(NatrixCallbackOptions options);
 
 /**
  * Immutable descriptor for a single node in a hierarchical CLI command tree.
@@ -75,7 +70,6 @@ typedef NatrixCommandCallback =
  */
 @immutable
 class NatrixCommand {
-
   final NatrixCommand? parent;
 
   /**
