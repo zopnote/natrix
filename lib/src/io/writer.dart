@@ -1,6 +1,5 @@
 import 'dart:io' as io show stdout, stderr, stdin;
-import 'package:natrix/src/core/text.dart'
-    show NatrixText, NatrixColor, NatrixStyle;
+import 'package:natrix/core.dart';
 
 class NatrixMount {
   final int position;
@@ -38,6 +37,7 @@ class NatrixStdoutSink {
 
 class NatrixStdio {
   int _totalLinesWritten = 0;
+
 
   (String, NatrixMount) requestInput({
     final NatrixText prefix = const NatrixText.empty(),

@@ -1,17 +1,14 @@
 import 'package:natrix/core.dart';
+import 'package:natrix/io.dart';
+import 'package:natrix/theme.dart';
 
 final NatrixCommand clang = NatrixCommand(
-  // A root command doesn't require an identifier.
-  // Tooltips aren't anytimes required too. If not specified,
-  // the first 37 characters of the description will be
-  // applied to the field.
+  id: "clang_cli",
+  expectArgument: false,
   tooltip: "A C/C++/Objective-C compiler driver.",
-  // Description will be displayed, when a more detailed usage advice is requested.
   description:
       "A C language family frontend for LLVM. "
       "Invoke a sub-command or pass --help for usage information.",
-  // If not other specified,
-  // the subcommands won't inherit the superior command's flags.
   flags: [
     NatrixBoolFlag(
       id: "version",
@@ -29,24 +26,13 @@ final NatrixCommand clang = NatrixCommand(
       id: "compile",
       description:
           "Compile one or more source files into object files or a single executable.",
-      // If it is wanted to inherit the superior flags,
-      // inheritFlags have to be true.
       inheritFlags: true,
       flags: [
         NatrixTextFlag(
           id: "output",
-          // Flags does not require an acronym.
-          // It is an optional one-char-short-form
-          // of the command and has to be unique too.
           acronym: NatrixChar("o"),
           tooltip: "Path to the output file.",
         ),
-        // The implementation of this one is kind of wrong.
-        // Own types, like enums or any other class should get an
-        // own Flag class with it's parser and formatter to better
-        // handle inputs.
-        // Here the "parsing step" happens later which is not intended,
-        // but it would work without side effects of course.
         NatrixTextFlag(
           id: "optimize",
           acronym: NatrixChar("O"),
@@ -73,11 +59,7 @@ final NatrixCommand clang = NatrixCommand(
           tooltip: "Add a directory to the header search path.",
         ),
       ],
-      // self is required to refer back to the command. E.g. for Syntax
-      // messages. To see more about these
-      // parameters look inside the NatrixPipeline.
-      callback: (options) {
-      },
+      callback: (options) {},
     ),
     NatrixCommand(
       id: "link",
@@ -105,14 +87,9 @@ final NatrixCommand clang = NatrixCommand(
           tooltip: "Produce a shared library instead of an executable.",
         ),
       ],
-      callback: (options) {
-
-      },
+      callback: (options) {},
     ),
     NatrixCommand(
-      // An command can also be hidden. In the default implementation
-      // of message output, a command wouldn't be displayed in usage advices if
-      // hidden is turned on.
       hidden: true,
       id: "format",
       description:
@@ -138,8 +115,11 @@ final NatrixCommand clang = NatrixCommand(
       callback: (options) {},
     ),
   ],
-  callback: (options) {options.theme;},
-  id: "clang_cli",
+  callback: (options) {
+    final NatrixTheme theme = NatrixDefaultTheme.of(options.getContext());
+    final NatrixStdio io = NatrixStdio();
+    io.writeLines(lines: theme.root.format());
+  },
 );
 
 Future<void> main(List<String> args) async {

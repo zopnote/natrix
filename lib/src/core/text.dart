@@ -1,5 +1,7 @@
-import 'package:meta/meta.dart' show immutable;
-import 'package:natrix/src/core/misc.dart' show NatrixStringCutExtension;
+import 'package:meta/meta.dart';
+
+import 'package:natrix/src/core/misc.dart';
+
 @immutable
 class NatrixChar {
   final String c;
@@ -10,7 +12,11 @@ class NatrixChar {
   }
 
   @override
-  bool operator ==(Object other) => c == other;
+  bool operator ==(Object other) => other is NatrixChar
+      ? c == other.c
+      : other is String
+      ? c == other
+      : false;
 
   String operator *(int times) => c * times;
 
@@ -19,6 +25,7 @@ class NatrixChar {
   @override
   String toString() => c;
 }
+
 class NatrixText {
   final NatrixColor background;
   final NatrixColor foreground;
@@ -29,28 +36,35 @@ class NatrixText {
       style.apply(background.colorize(foreground.colorize(text)));
 
   const NatrixText(
-      this.text, {
-        this.foreground = .none,
-        this.background = .none,
-        this.style = .none,
-      });
+    this.text, {
+    this.foreground = .none,
+    this.background = .none,
+    this.style = .none,
+  });
   const NatrixText.empty()
-      : text = "",
-        foreground = .none,
-        background = .none,
-        style = .none;
+    : text = "",
+      foreground = .none,
+      background = .none,
+      style = .none;
   factory NatrixText.join(List<NatrixText> components) {
     String s = "";
     components.forEach((c) => s += c.ansi);
     return NatrixText(s);
   }
-
+  bool get isEmpty => ansi.isEmpty;
+  bool get isNotEmpty => ansi.isNotEmpty;
+  int get length => ansi.length;
+  List<int> get codeUnits => ansi.codeUnits;
   bool valid() =>
       !RegExp(r'\x1B$$[0-9;]*[^m]').hasMatch(text) &&
-          !text.contains("\n") &&
-          !text.contains("\r");
+      !text.contains("\n") &&
+      !text.contains("\r");
 
-  List<NatrixText> wrap(final int maxLength) {
+  List<NatrixText> wrap(
+    final int maxLength, [
+    List<NatrixChar>? breakpointCharacter,
+  ]) {
+    breakpointCharacter ??= [NatrixChar(' ')];
     if (ansi.length < maxLength) {
       return [this];
     }
@@ -60,8 +74,10 @@ class NatrixText {
     int breakpoint = 0;
     int count = 0;
     while (count < buffer.length) {
-      breakpoint = buffer[count] == " " ? count + 1 : breakpoint;
-      if (count < maxLength) {
+      if (buffer[count] == " ") {
+        breakpoint = count + 1;
+      }
+      if (count < maxLength - 1) {
         count++;
         continue;
       }
@@ -78,6 +94,21 @@ class NatrixText {
   @override
   String toString() => ansi;
 
+  NatrixText operator *(int other) {
+    if (other < 1) {
+      return NatrixText.empty();
+    }
+    final List<NatrixText> components = [];
+    for (int i = 0; i < other; i++) {
+      components.add(this);
+    }
+    return NatrixText.join(components);
+  }
+
+  NatrixText operator +(NatrixText other) {
+    return NatrixText.join([this, other]);
+  }
+
   @override
   bool operator ==(Object other) {
     if (other is String) {
@@ -92,7 +123,6 @@ class NatrixText {
   @override
   int get hashCode => ansi.hashCode;
 }
-
 
 enum NatrixStyle {
   none(-1, -1),

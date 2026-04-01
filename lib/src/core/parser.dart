@@ -1,20 +1,17 @@
-
-import 'package:natrix/src/core/flag.dart' show NatrixFlag, NatrixBoolFlag;
-import 'package:natrix/src/core/misc.dart' show IterableFirstWhereOrNullExtension, simpleStringReduction;
-
-
+import 'package:natrix/core.dart';
+import 'package:natrix/src/core/misc.dart';
 
 class NatrixParserFlag {
-  final String id;
+  final String tag;
   final String val;
   final bool isShort;
 
-  const NatrixParserFlag(this.id, this.val, this.isShort);
+  const NatrixParserFlag(this.tag, this.val, this.isShort);
 
-  NatrixParserFlag set(String val) => NatrixParserFlag(id, val, isShort);
+  NatrixParserFlag set(String val) => NatrixParserFlag(tag, val, isShort);
 
   @override
-  String toString() => id;
+  String toString() => tag;
 
   @override
   int get hashCode => super.hashCode;
@@ -79,7 +76,7 @@ class NatrixParser {
           continue;
         }
         final NatrixParserFlag r = parseRawFlag(args[i]);
-        if (r.isShort ? f.acronym != r.id : f.id != r.id) {
+        if (r.isShort ? f.acronym != r.tag : f.id != r.tag) {
           continue;
         }
         if (f is NatrixBoolFlag || r.val.isNotEmpty) {
@@ -125,7 +122,7 @@ class NatrixParser {
       }
       final NatrixParserFlag r = parseRawFlag(args[i]);
       final NatrixFlag? flag = predefinedFlags.firstWhereOrNull(
-        (f) => r.isShort ? f.acronym == r.id : f.id == r.id,
+        (f) => r.isShort ? f.acronym == r.tag : f.id == r.tag,
       );
       if (flag == null) {
         throw Exception(

@@ -2,22 +2,12 @@ import 'dart:async' show FutureOr;
 
 import 'package:meta/meta.dart' show immutable;
 
-import 'package:natrix/src/core/flag.dart' show NatrixFlag;
-import 'package:natrix/src/core/pipeline.dart'
-    show NatrixPipeline, NatrixCallbackOptions;
-
-import 'package:natrix/src/core/misc.dart' show NatrixStringCutExtension;
+import 'package:natrix/core.dart';
+import 'package:natrix/src/core/misc.dart';
 
 /**
  * Callback signature invoked when a [NatrixCommand] is selected during
  * pipeline traversal.
- *
- * Receives the resolved [NatrixCommand] instance as [self], the positional [arguments] remaining after flag tokens have
- * been consumed, and the fully parsed [flags] collection whose values
- * can be retrieved via [NatrixIterableFlagExtension.getFlag].
- *
- * Returns [FutureOr<void>] so that both synchronous and asynchronous
- * implementations are accepted without adaptation.
  */
 typedef NatrixCommandCallback =
     FutureOr<void> Function(NatrixCallbackOptions options);
@@ -25,68 +15,49 @@ typedef NatrixCommandCallback =
 /**
  * Immutable descriptor for a single node in a hierarchical CLI command tree.
  *
- * A [NatrixCommand] binds a unique string [id], human-readable metadata
- * ([description], [tooltip]), structural configuration ([flags], [children],
- * [inheritFlags], [hidden]), and an executable [callback] into one value
- * object.
- *
- * Commands form a tree: the root command (could be identified by an empty [id]) acts
- * as the application entry point, while each element in [children] represents
- * a sub-command that is matched against successive positional arguments at
- * runtime. [NatrixPipeline] walks this tree depth-first: it compares every
+ * [NatrixPipeline] walks this tree depth-first. It compares every
  * child's [id] to the next positional argument, descends into the first
  * match, and finally delegates execution to the deepest node reached.
- *
- *
- * ```dart
- * final clang = NatrixCommand(
- *   tooltip: "A C/C++/Objective-C compiler driver.",
- *   description: "A C language family frontend for LLVM.",
- *   flags: [
- *     NatrixBoolFlag(id: "version", acronym: NatrixChar("v"),
- *         tooltip: "Print the version string and exit."),
- *     NatrixBoolFlag(id: "help", acronym: NatrixChar("h"),
- *         tooltip: "Print this help message and exit."),
- *   ],
- *   children: [
- *     NatrixCommand(
- *       id: "compile",
- *       description: "Compile source files into object files.",
- *       inheritFlags: true,
- *       flags: [
- *         NatrixTextFlag(id: "output", acronym: NatrixChar("o"),
- *             tooltip: "Path to the output file."),
- *       ],
- *       callback: (self, arguments, flags) {
- *         final output = flags.get<String>("output").value;
- *       },
- *     ),
- *   ],
- *   callback: (self, arguments, flags) {},
- * );
- *
- * await NatrixPipeline(arguments: args).run(clang);
- * ```
  */
 @immutable
 class NatrixCommand {
+  /**
+   * During processing within [NatrixPipeline], [NatrixCommand] will be
+   * added as a parent to a new instance, corresponding to its parent
+   * [NatrixCommand] in the CLI tree.
+   */
   final NatrixCommand? parent;
 
   /**
-   * The token matched against a positional argument during pipeline traversal.
-   *
-   * [NatrixPipeline] compares each child's [id] to the corresponding raw
-   * argument to decide which branch to descend into.
+   * The identifier matched against a positional argument during pipeline traversal.
    */
   final String id;
-
+  final bool expectArgument;
+  final String argumentName;
   /**
    * A concise single-line summary displayed in abbreviated help contexts.
-   *
-   * When omitted at construction time the factory truncates [description] to
-   * its first characters.
    */
-  final String tooltip;
+  final String? _tooltip;
+
+  String get tooltip => getTooltip();
+  String getTooltip({int maxLength = 37}) {
+    final String buffer = _tooltip ?? description;
+    if (buffer.length < maxLength) {
+      return buffer;
+    }
+    int breakpoint = maxLength;
+    int i = 0;
+    while (true) {
+      if (buffer[i] == " ") {
+        breakpoint = i;
+      }
+      if (i < maxLength - 1) {
+        i++;
+        continue;
+      }
+      return buffer.cut(0, breakpoint) + "...";
+    }
+  }
 
   /**
    * A full-length explanation of the command's purpose and behaviour.
@@ -103,74 +74,60 @@ class NatrixCommand {
    *
    * When `true`, [NatrixPipeline] merges the flags registered on ancestor
    * commands into this command's parsing context in addition to its own
-   * [flags]. Defaults to `false`.
+   * [flags].
    */
   final bool inheritFlags;
 
   /**
    * The flags recognised when this command is the execution target.
-   *
-   * Every element must carry a unique [NatrixFlag.id] and, when set, a
-   * unique [NatrixFlag.acronym] within the same list.
    */
   final List<NatrixFlag> flags;
 
   /**
-   * The sub-commands nested directly beneath this command.
-   *
-   * [NatrixPipeline] iterates [children] to locate the first entry whose
-   * [id] matches the next positional argument, then descends into that
-   * child. Unreachable commands (not listed here) cannot be triggered
-   * through standard pipeline execution.
+   * The sub-commands nested directly beneath this command inside pipeline traversal.
    */
   final Iterable<NatrixCommand> children;
 
   /**
    * The function executed when this command is selected as the final
    * target of pipeline resolution.
-   *
-   * See [NatrixCommandCallback] for the full signature contract.
    */
   final NatrixCommandCallback callback;
 
   const NatrixCommand._internal({
+    String? tooltip,
     this.parent,
     required this.id,
-    required this.tooltip,
     required this.description,
     required this.hidden,
     required this.inheritFlags,
     required this.flags,
     required this.children,
     required this.callback,
-  });
+    required this.expectArgument,
+    required this.argumentName,
+  }) : _tooltip = tooltip;
 
   /**
    * Creates a validated [NatrixCommand].
-   *
-   * Parameter defaults and derivation rules:
-   *
-   * - [id] defaults to `""`, designating a root command.
-   * - [tooltip] defaults to the first 37 characters of [description]
-   *   followed by `"..."`.
-   * - [hidden] is forced to `true` when [id] is empty; otherwise
-   *   defaults to `false`.
-   * - [inheritFlags] defaults to `false`.
-   * - [flags] and [children] default to empty immutable lists.
-   *
-   * Throws an [Exception] if any two entries in [flags] share the same
-   * [NatrixFlag.id] or [NatrixFlag.acronym].
    */
   factory NatrixCommand.new({
     required final String id,
     String? tooltip,
     required final String description,
     required final NatrixCommandCallback callback,
+    final bool expectArgument = true,
+    final String argumentName = "argument",
     final bool inheritFlags = false,
     bool hidden = false,
     final List<NatrixFlag> flags = const [],
     final List<NatrixCommand> children = const [],
   }) {
+    if (argumentName.isEmpty && expectArgument) {
+      throw Exception(
+        "The name of an argument cannot be empty, if an argument is expected.",
+      );
+    }
     void same(final NatrixFlag a, final NatrixFlag b) {
       bool twin = a.id == b.id;
       twin = twin || a.acronym == b.acronym;
@@ -184,13 +141,14 @@ class NatrixCommand {
 
     flags.forEach((f) => flags.where((o) => o != f).forEach((o) => same(f, o)));
     hidden = id.isEmpty || hidden;
-    tooltip ??= description.cut(0, 37) + "...";
 
     return NatrixCommand._internal(
       id: id,
       tooltip: tooltip,
       description: description,
       hidden: hidden,
+      expectArgument: expectArgument,
+      argumentName: argumentName,
       inheritFlags: inheritFlags,
       flags: flags,
       children: children,
@@ -199,13 +157,19 @@ class NatrixCommand {
   }
 
   bool hasParent() => parent != null;
-  NatrixCommand withParent(final NatrixCommand parent) =>
+
+  /**
+   * Returns a copy of this command with the provided [parent] assigned.
+   */
+  NatrixCommand withParent([final NatrixCommand? parent]) =>
       NatrixCommand._internal(
         parent: parent,
         id: id,
-        tooltip: tooltip,
+        tooltip: _tooltip,
+        argumentName: argumentName,
         description: description,
         hidden: hidden,
+        expectArgument: expectArgument,
         inheritFlags: inheritFlags,
         flags: flags,
         children: children,

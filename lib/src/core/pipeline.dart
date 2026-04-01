@@ -1,26 +1,45 @@
-import 'dart:async';
-import 'dart:io';
+import 'package:natrix/core.dart';
 
-import 'package:natrix/src/core/parser.dart' show NatrixParser, NatrixParserOutput;
-import 'package:natrix/src/core/command.dart' show NatrixCommand;
-import 'package:natrix/src/core/flag.dart' show NatrixFlag;
-import 'package:natrix/src/core/theme.dart'
-    show NatrixTheme, NatrixContext, NatrixDefaultTheme;
+class NatrixContext {
+  final NatrixCommand command;
+  final NatrixParserOutput parserOutput;
+  final Iterable<NatrixFlag> globalFlags;
 
-typedef NatrixThemeCallback = NatrixTheme Function(NatrixContext);
+  const NatrixContext({
+    required this.command,
+    required this.parserOutput,
+    required this.globalFlags,
+  });
+}
 
 class NatrixCallbackOptions {
   final NatrixCommand command;
   final List<String> arguments;
   final Iterable<NatrixFlag> flags;
-  final NatrixTheme theme;
+
+  /**
+   * Direct output of [NatrixParser.parse()].
+   */
+  final NatrixParserOutput _parserOutput;
+  /**
+   * Sublist of global [NatrixFlag] that are also in [flags].
+   */
+  final Iterable<NatrixFlag> _globalFlags;
 
   const NatrixCallbackOptions({
     required this.command,
-    required this.theme,
     required this.arguments,
     required this.flags,
-  });
+    required NatrixParserOutput parserOutput,
+    required Iterable<NatrixFlag> globalFlags,
+  }) : _globalFlags = globalFlags,
+       _parserOutput = parserOutput;
+
+  NatrixContext getContext() => NatrixContext(
+    command: command,
+    parserOutput: _parserOutput,
+    globalFlags: _globalFlags,
+  );
 
   NatrixFlag<T> getFlag<T>(String name) {
     for (final NatrixFlag f in flags) {
@@ -37,18 +56,17 @@ class NatrixCallbackOptions {
 final class NatrixPipeline {
   final List<String> _arguments;
   final Iterable<NatrixFlag> _global;
-  final NatrixParser parser;
-  late final NatrixThemeCallback theme;
+  final NatrixParser _parser;
   NatrixPipeline({
     required List<String> arguments,
-    this.parser = const NatrixParser(),
+    NatrixParser parser = const NatrixParser(),
     List<NatrixFlag> globalFlags = const [],
-  }) : _global = globalFlags,
-       _arguments = arguments,
-       theme = ((context) => NatrixDefaultTheme(context));
+  }) : _parser = parser,
+       _global = globalFlags,
+       _arguments = arguments;
 
   Future<void> run(NatrixCommand command) async {
-    final List<String> args = parser.mergeArguments(_arguments);
+    final List<String> args = _parser.mergeArguments(_arguments);
 
     NatrixCommand c = command;
     final List<NatrixFlag> flags = [];
@@ -67,21 +85,15 @@ final class NatrixPipeline {
       }
       break;
     }
-    final NatrixParserOutput options = parser.parse(args, flags);
+    final NatrixParserOutput parserOutput = _parser.parse(args, flags);
 
     await command.callback(
       NatrixCallbackOptions(
         command: command,
-        flags: options.flags,
-        arguments: options.arguments,
-        theme: theme(
-          NatrixContext(
-            command: command,
-            options: options,
-            globalFlags: _global,
-            lineLength: stdout.hasTerminal ? stdout.terminalColumns : 512,
-          ),
-        ),
+        flags: parserOutput.flags,
+        arguments: parserOutput.arguments,
+        globalFlags: _global,
+        parserOutput: parserOutput,
       ),
     );
   }
