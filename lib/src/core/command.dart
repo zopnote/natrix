@@ -20,6 +20,56 @@ typedef NatrixCommandCallback =
  */
 @immutable
 class NatrixCommand {
+  const NatrixCommand._internal({
+    String? tooltip,
+    this.parent,
+    required this.id,
+    required this.description,
+    required this.hidden,
+    required this.inheritFlags,
+    required this.flags,
+    required this.children,
+    required this.callback,
+    required this.argumentTip,
+  }) : _tooltip = tooltip;
+
+  factory NatrixCommand.new({
+    required final String id,
+    String? tooltip,
+    required final String description,
+    required final NatrixCommandCallback callback,
+    final String argumentTip = "",
+    final bool inheritFlags = false,
+    bool hidden = false,
+    final List<NatrixFlag> flags = const [],
+    final List<NatrixCommand> children = const [],
+  }) {
+    void same(final NatrixFlag a, final NatrixFlag b) {
+      bool twin = a.id == b.id;
+      twin = twin || a.acronym == b.acronym;
+      if (twin) {
+        throw Exception(
+          "A conflict with the flag ${a.id} has been detected. "
+          "Please change the relevant acronym or identifier.",
+        );
+      }
+    }
+
+    flags.forEach((f) => flags.where((o) => o != f).forEach((o) => same(f, o)));
+    hidden = id.isEmpty || hidden;
+
+    return NatrixCommand._internal(
+      id: id,
+      tooltip: tooltip,
+      description: description,
+      hidden: hidden,
+      argumentTip: argumentTip,
+      inheritFlags: inheritFlags,
+      flags: flags,
+      children: children,
+      callback: callback,
+    );
+  }
   /**
    * During processing within [NatrixPipeline], [NatrixCommand] will be
    * added as a parent to a new instance, corresponding to its parent
@@ -78,57 +128,6 @@ class NatrixCommand {
    * target of pipeline resolution.
    */
   final NatrixCommandCallback callback;
-
-  const NatrixCommand._internal({
-    String? tooltip,
-    this.parent,
-    required this.id,
-    required this.description,
-    required this.hidden,
-    required this.inheritFlags,
-    required this.flags,
-    required this.children,
-    required this.callback,
-    required this.argumentTip,
-  }) : _tooltip = tooltip;
-
-  factory NatrixCommand.new({
-    required final String id,
-    String? tooltip,
-    required final String description,
-    required final NatrixCommandCallback callback,
-    final String argumentTip = "",
-    final bool inheritFlags = false,
-    bool hidden = false,
-    final List<NatrixFlag> flags = const [],
-    final List<NatrixCommand> children = const [],
-  }) {
-    void same(final NatrixFlag a, final NatrixFlag b) {
-      bool twin = a.id == b.id;
-      twin = twin || a.acronym == b.acronym;
-      if (twin) {
-        throw Exception(
-          "A conflict with the flag ${a.id} has been detected. "
-          "Please change the relevant acronym or identifier.",
-        );
-      }
-    }
-
-    flags.forEach((f) => flags.where((o) => o != f).forEach((o) => same(f, o)));
-    hidden = id.isEmpty || hidden;
-
-    return NatrixCommand._internal(
-      id: id,
-      tooltip: tooltip,
-      description: description,
-      hidden: hidden,
-      argumentTip: argumentTip,
-      inheritFlags: inheritFlags,
-      flags: flags,
-      children: children,
-      callback: callback,
-    );
-  }
 
   bool hasParent() => parent != null;
   bool hasChildren() => children.isNotEmpty;

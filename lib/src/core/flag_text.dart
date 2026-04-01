@@ -1,3 +1,7 @@
+import 'package:natrix/core.dart';
+
+import 'misc.dart' show simpleStringReduction;
+
 /**
  * Flag implementation for string values.
  *
@@ -21,4 +25,3 @@ final class NatrixTextFlag extends NatrixFlag<String> {
   NatrixFlag<String> set(String value) =>
       NatrixTextFlag(id: id, acronym: acronym, tooltip: tooltip, value: value);
 }
-

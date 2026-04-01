@@ -1,29 +1,10 @@
+import 'package:natrix/core.dart';
+
 /**
- * Flag für boolesche Werte (bool).
+ * Flag for Boolean values (bool).
  *
- * ## Anwendung
- *
- * Verwenden Sie [NatrixBoolFlag] für einfache Schalter, die aktiviert
- * oder deaktiviert werden können.
- *
- * ## Beispiel
- *
- * ```dart
- * NatrixBoolFlag(
- *   id: "verbose",
- *   acronym: NatrixChar("v"),
- *   tooltip: "Ausführliche Ausgabe aktivieren",
- *   value: false,  // Standardwert (optional)
- * )
- * ```
- *
- * Aufruf: `programm --verbose` oder `programm -v` setzt das Flag auf `true`.
- *
- * ## Verhalten
- *
- * - Ohne Wert oder mit jedem Wert außer "false": Flag ist `true`
- * - Mit Wert "false": Flag ist `false`
- * - Beispiel: `--verbose false` ergibt `false`
+ * Use [NatrixBoolFlag] for simple toggles that can be enabled
+ * or disabled.
  */
 final class NatrixBoolFlag extends NatrixFlag<bool> {
   const NatrixBoolFlag({
@@ -32,7 +13,9 @@ final class NatrixBoolFlag extends NatrixFlag<bool> {
     super.value = false,
     super.tooltip,
   });
+
   String format(bool value) => value.toString();
+
   bool parse(String raw) => raw != "false" || raw.isEmpty;
 
   @override

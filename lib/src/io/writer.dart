@@ -38,7 +38,6 @@ class NatrixStdoutSink {
 class NatrixStdio {
   int _totalLinesWritten = 0;
 
-
   (String, NatrixMount) requestInput({
     final NatrixText prefix = const NatrixText.empty(),
     NatrixColor inputForegroundColor = .none,
@@ -127,7 +126,7 @@ class NatrixStdio {
   @override
   bool operator ==(Object other) {
     throw Exception(
-      "It makes no sense to check whether two NatrixWriters are equal.",
+      "NatrixWriter is expected to be a singleton, it is meaningless to compare instances.",
     );
   }
 

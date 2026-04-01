@@ -2,7 +2,6 @@ name: natrix
 description: A Dart package for easily creating command line applications.
 version: 0.1.1
 repository: https://github.com/zopnote/natrix
-publish_to: none
 
 environment:
   sdk: ^3.10.6

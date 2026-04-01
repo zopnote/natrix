@@ -2,14 +2,17 @@ import 'package:meta/meta.dart';
 
 import 'package:natrix/src/core/misc.dart';
 
+/**
+ * Represents a single character string.
+ */
 @immutable
 class NatrixChar {
-  final String c;
   NatrixChar(this.c) {
     if (c.length > 1) {
       throw Exception("A character cannot be longer than 1 unit.");
     }
   }
+  final String c;
 
   @override
   bool operator ==(Object other) => other is NatrixChar
@@ -26,40 +29,86 @@ class NatrixChar {
   String toString() => c;
 }
 
+/**
+ * Represents a multicharacter string with
+ * ansi escape sequence and filestream formatting.
+ */
 class NatrixText {
-  final NatrixColor background;
-  final NatrixColor foreground;
-  final NatrixStyle style;
-  final String text;
-
-  String get ansi =>
-      style.apply(background.colorize(foreground.colorize(text)));
-
   const NatrixText(
     this.text, {
     this.foreground = .none,
     this.background = .none,
     this.style = .none,
   });
+
   const NatrixText.empty()
     : text = "",
       foreground = .none,
       background = .none,
       style = .none;
-  factory NatrixText.join(List<NatrixText> components) {
+
+  factory NatrixText.join(List<NatrixText> parts) {
     String s = "";
-    components.forEach((c) => s += c.ansi);
+    parts.forEach((c) => s += c.ansi);
     return NatrixText(s);
   }
+  /**
+   * The ansi escape sequence color of the background.
+   */
+  final NatrixColor background;
+  /**
+   * The ansi escape sequence color of foreground.
+   */
+  final NatrixColor foreground;
+  /**
+   * The ansi escape sequence style of the text.
+   */
+  final NatrixStyle style;
+
+  /**
+   * The raw string which won't get manipulated later on.
+   */
+  final String text;
+
+  /**
+   * Format the ansi sequences into a ready-to-output string.
+   */
+  String get ansi =>
+      style.apply(background.colorize(foreground.colorize(text)));
+
+  /**
+   * Whether the ansi-formatted-text is empty.
+   */
   bool get isEmpty => ansi.isEmpty;
+  /**
+   * Whether the ansi-formatted-text is not empty.
+   */
   bool get isNotEmpty => ansi.isNotEmpty;
+
+  /**
+   * Length of the [ansi]-[String].
+   */
   int get length => ansi.length;
+
+  /**
+   * Codeunits of the [ansi]-[String].
+   */
   List<int> get codeUnits => ansi.codeUnits;
+
+  /**
+   * Whether the ansi string contains unallowed,
+   * cursor manipulating sequences.
+   */
   bool valid() =>
       !RegExp(r'\x1B$$[0-9;]*[^m]').hasMatch(text) &&
       !text.contains("\n") &&
       !text.contains("\r");
 
+  /**
+   * Wraps the [ansi] text literal into multiple lines to for-fill the requirements
+   * of [maxLength]. With [breakpointCharacter]s, it could be specified where the
+   * line breaks should preferably be set.
+   */
   List<NatrixText> wrap(
     final int maxLength, [
     List<NatrixChar>? breakpointCharacter,
@@ -124,6 +173,9 @@ class NatrixText {
   int get hashCode => ansi.hashCode;
 }
 
+/**
+ * Definition of the corresponding ANSI escape sequence values for their styles.
+ */
 enum NatrixStyle {
   none(-1, -1),
   bold(1, 22),
@@ -142,6 +194,9 @@ enum NatrixStyle {
   String apply(String text) => "$ansiStartSequence$text$ansiResetSequence";
 }
 
+/**
+ * Definition of the corresponding ANSI escape sequence values for their colors.
+ */
 enum NatrixColor {
   none(-1),
   grayDark(236),

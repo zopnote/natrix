@@ -1,4 +1,3 @@
-
 extension NatrixStringCutExtension on String {
   String cut(int start, [int? end]) =>
       substring(start, (end ?? length).clamp(0, length));

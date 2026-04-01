@@ -2,24 +2,22 @@ import 'package:natrix/core.dart';
 import 'package:natrix/theme.dart';
 
 /**
- * Definiert den Textabschnitt, der vorwiegend bei der Anfrage eines
- * Anwendungshinweises eines [NatrixCommand] zurückgegeben wird.
+ * Defines the text section that is typically returned when requesting an application note for a [NatrixCommand].
  */
 class NatrixHeader implements NatrixSection {
   /**
-   * Eine kurze Beschreibung des [NatrixCommand].
+   * A brief description of the [NatrixCommand].
    */
   final List<NatrixText> tooltip;
 
   /**
-   * Eine formatierte und kurze Darstellung der möglichen und richtigen Anwendung
-   * des [NatrixCommand].
+   * A brief, structured overview of the possible and correct uses of the [NatrixCommand].
    */
   final NatrixText usage;
 
   /**
-   * Eine ausführliche Beschreibung des [NatrixCommand] um Nutzern
-   * über sein jeweiliges Verhalten aufzuklären.
+   * A detailed description of the [NatrixCommand] to inform users
+   * about how it works.
    */
   final List<NatrixText> description;
 

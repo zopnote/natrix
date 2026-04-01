@@ -1,12 +1,28 @@
 import 'package:natrix/core.dart';
 import 'package:natrix/src/core/misc.dart';
 
+/**
+ * Represents an unprocessed flag read directly from the command-line input.
+ */
 class NatrixParserFlag {
-  final String tag;
-  final String val;
-  final bool isShort;
-
   const NatrixParserFlag(this.tag, this.val, this.isShort);
+
+  /**
+   * The [tag] of the flag (the flag’s identifier or acronym),
+   * specified on the command line (``-t`` or ``--test``).
+   */
+  final String tag;
+
+  /**
+   * A [string] value to be assigned to the flag call.
+   */
+  final String val;
+
+  /**
+   * Whether the flag was called in short
+   * form (``-e``) or in long form (``--example``);
+   */
+  final bool isShort;
 
   NatrixParserFlag set(String val) => NatrixParserFlag(tag, val, isShort);
 
@@ -20,15 +36,36 @@ class NatrixParserFlag {
   bool operator ==(Object other) => identical(other, this);
 }
 
+/**
+ * [NatrixParserOutput] holds the output of the process within [NatrixParser].
+ */
 class NatrixParserOutput {
+  const NatrixParserOutput([this.args = const [], this.flags = const []]);
+
+  /**
+   * An [Iterable] of all [NatrixFlag]s which will be applied to a command.
+   */
   final Iterable<NatrixFlag> flags;
-  final List<String> arguments;
-  const NatrixParserOutput([this.arguments = const [], this.flags = const []]);
+
+  /**
+   * The [args], that will be finally applied to a commands callback.
+   */
+  final List<String> args;
 }
 
+/**
+ * The [NatrixParser] processes command-line input in a standard CLI syntax.
+ * This is the implementation of the user interface.
+ */
 class NatrixParser {
   const NatrixParser();
 
+  /**
+   * To process the arguments correctly, the system checks for quotation
+   * marks in the arguments, as well as for opening and closing brackets,
+   * to ensure that the [mergedArguments] contain related
+   * data to actual parse it later.
+   */
   List<String> mergeArguments(List<String> rawArguments) {
     final List<String> args = [];
     String arg = "";
@@ -51,6 +88,10 @@ class NatrixParser {
     return args;
   }
 
+  /**
+   * Reads raw [String] input and map it into the description of a flag usable for
+   * further processing.
+   */
   NatrixParserFlag parseRawFlag(String raw, [String? val]) {
     final List<String> parts = raw.split("=");
     final bool isShort = !raw.startsWith("--") && raw.startsWith("-");
@@ -61,6 +102,11 @@ class NatrixParser {
     );
   }
 
+  /**
+   * Using the [predefinedFlags], it is possible to determine the corresponding
+   * [NatrixFlag] called from the input values ([mergedArguments]) and create
+   * a copy of the instance with the new value provided.
+   */
   Iterable<NatrixFlag> parseFlags(
     final List<String> mergedArguments,
     final Iterable<NatrixFlag> predefinedFlags,
@@ -104,20 +150,20 @@ class NatrixParser {
     return flags;
   }
 
+  /**
+   * Reads [mergedArguments] (by default from [NatrixParser.mergeArguments()])
+   * and converts them into concrete, interface-compliant value representations.
+   */
   NatrixParserOutput parse(
     final List<String> mergedArguments,
     final Iterable<NatrixFlag> predefinedFlags,
   ) {
     final List<String> options = [];
     final List<String> args = mergedArguments;
-    int i = 0;
-    for (;;) {
-      if (i >= args.length) {
-        break;
-      }
+    ;
+    for (int i = 0; i < args.length; i++) {
       if (!args[i].startsWith("-")) {
         options.add(simpleStringReduction(args[i]));
-        i++;
         continue;
       }
       final NatrixParserFlag r = parseRawFlag(args[i]);
@@ -130,14 +176,12 @@ class NatrixParser {
         );
       }
       if (r.val.isNotEmpty || i >= args.length - 1) {
-        i++;
         continue;
       }
       if (!args[i + 1].startsWith("-")) {
-        i += 2;
+        i++;
         continue;
       }
-      i++;
     }
     return NatrixParserOutput(
       options,

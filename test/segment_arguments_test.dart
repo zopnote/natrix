@@ -1,6 +1,4 @@
-import 'package:natrix/core.dart' show NatrixTextFlag, NatrixChar;
-import 'package:natrix/src/core/flag.dart' show NatrixBoolFlag;
-import 'package:natrix/src/core/parser.dart' show NatrixParser, NatrixParserOutput;
+import 'package:natrix/core.dart';
 import 'package:test/test.dart';
 
 extension SerializeNatrixOptionsExtension on NatrixParserOutput {
@@ -14,7 +12,7 @@ extension SerializeNatrixOptionsExtension on NatrixParserOutput {
         "value": flag.value,
       },
     ),
-    "arguments": arguments,
+    "arguments": args,
   };
 }
 
