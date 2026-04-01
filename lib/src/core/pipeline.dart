@@ -1,12 +1,13 @@
+import 'dart:async';
 import 'package:natrix/core.dart';
 
 class NatrixContext {
-  final NatrixCommand command;
+  final NatrixCommand cmd;
   final NatrixParserOutput parserOutput;
   final Iterable<NatrixFlag> globalFlags;
 
   const NatrixContext({
-    required this.command,
+    required this.cmd,
     required this.parserOutput,
     required this.globalFlags,
   });
@@ -36,7 +37,7 @@ class NatrixCallbackOptions {
        _parserOutput = parserOutput;
 
   NatrixContext getContext() => NatrixContext(
-    command: command,
+    cmd: command,
     parserOutput: _parserOutput,
     globalFlags: _globalFlags,
   );
@@ -65,20 +66,17 @@ final class NatrixPipeline {
        _global = globalFlags,
        _arguments = arguments;
 
-  Future<void> run(NatrixCommand command) async {
+  FutureOr<void> run(NatrixCommand cmd) async {
     final List<String> args = _parser.mergeArguments(_arguments);
-
-    NatrixCommand c = command;
     final List<NatrixFlag> flags = [];
-
     bool found = true;
     int i = 0;
     while (found) {
-      flags.addAll(c.flags);
-      for (final NatrixCommand s in c.children) {
+      flags.addAll(cmd.flags);
+      for (final NatrixCommand s in cmd.children) {
         found = s.id == args.elementAtOrNull(i);
         if (found) {
-          c = s.withParent(c);
+          cmd = s.withParent(cmd);
           i++;
           break;
         }
@@ -86,10 +84,9 @@ final class NatrixPipeline {
       break;
     }
     final NatrixParserOutput parserOutput = _parser.parse(args, flags);
-
-    await command.callback(
+    return cmd.callback(
       NatrixCallbackOptions(
-        command: command,
+        command: cmd,
         flags: parserOutput.flags,
         arguments: parserOutput.arguments,
         globalFlags: _global,

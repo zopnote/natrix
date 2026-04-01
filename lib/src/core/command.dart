@@ -3,7 +3,6 @@ import 'dart:async' show FutureOr;
 import 'package:meta/meta.dart' show immutable;
 
 import 'package:natrix/core.dart';
-import 'package:natrix/src/core/misc.dart';
 
 /**
  * Callback signature invoked when a [NatrixCommand] is selected during
@@ -32,32 +31,18 @@ class NatrixCommand {
    * The identifier matched against a positional argument during pipeline traversal.
    */
   final String id;
-  final bool expectArgument;
-  final String argumentName;
+
+  /**
+   * The [argumentTip] is a word that describes the argument in help requests
+   * and briefly explains to the user what they should enter.
+   */
+  final String argumentTip;
+
   /**
    * A concise single-line summary displayed in abbreviated help contexts.
    */
+  String get tooltip => _tooltip ?? description;
   final String? _tooltip;
-
-  String get tooltip => getTooltip();
-  String getTooltip({int maxLength = 37}) {
-    final String buffer = _tooltip ?? description;
-    if (buffer.length < maxLength) {
-      return buffer;
-    }
-    int breakpoint = maxLength;
-    int i = 0;
-    while (true) {
-      if (buffer[i] == " ") {
-        breakpoint = i;
-      }
-      if (i < maxLength - 1) {
-        i++;
-        continue;
-      }
-      return buffer.cut(0, breakpoint) + "...";
-    }
-  }
 
   /**
    * A full-length explanation of the command's purpose and behaviour.
@@ -104,30 +89,20 @@ class NatrixCommand {
     required this.flags,
     required this.children,
     required this.callback,
-    required this.expectArgument,
-    required this.argumentName,
+    required this.argumentTip,
   }) : _tooltip = tooltip;
 
-  /**
-   * Creates a validated [NatrixCommand].
-   */
   factory NatrixCommand.new({
     required final String id,
     String? tooltip,
     required final String description,
     required final NatrixCommandCallback callback,
-    final bool expectArgument = true,
-    final String argumentName = "argument",
+    final String argumentTip = "",
     final bool inheritFlags = false,
     bool hidden = false,
     final List<NatrixFlag> flags = const [],
     final List<NatrixCommand> children = const [],
   }) {
-    if (argumentName.isEmpty && expectArgument) {
-      throw Exception(
-        "The name of an argument cannot be empty, if an argument is expected.",
-      );
-    }
     void same(final NatrixFlag a, final NatrixFlag b) {
       bool twin = a.id == b.id;
       twin = twin || a.acronym == b.acronym;
@@ -147,8 +122,7 @@ class NatrixCommand {
       tooltip: tooltip,
       description: description,
       hidden: hidden,
-      expectArgument: expectArgument,
-      argumentName: argumentName,
+      argumentTip: argumentTip,
       inheritFlags: inheritFlags,
       flags: flags,
       children: children,
@@ -157,6 +131,7 @@ class NatrixCommand {
   }
 
   bool hasParent() => parent != null;
+  bool hasChildren() => children.isNotEmpty;
 
   /**
    * Returns a copy of this command with the provided [parent] assigned.
@@ -166,10 +141,9 @@ class NatrixCommand {
         parent: parent,
         id: id,
         tooltip: _tooltip,
-        argumentName: argumentName,
+        argumentTip: argumentTip,
         description: description,
         hidden: hidden,
-        expectArgument: expectArgument,
         inheritFlags: inheritFlags,
         flags: flags,
         children: children,

@@ -4,15 +4,14 @@ import 'package:natrix/theme.dart';
 
 final NatrixCommand clang = NatrixCommand(
   id: "clang_cli",
-  expectArgument: false,
   tooltip: "A C/C++/Objective-C compiler driver.",
   description:
       "A C language family frontend for LLVM. "
       "Invoke a sub-command or pass --help for usage information.",
   flags: [
     NatrixBoolFlag(
-      id: "version",
       acronym: NatrixChar("v"),
+      id: "version",
       tooltip: "Print the clang version string and exit.",
     ),
     NatrixBoolFlag(
@@ -24,8 +23,10 @@ final NatrixCommand clang = NatrixCommand(
   children: [
     NatrixCommand(
       id: "compile",
+      tooltip:
+          "Compile source files into .o files or an exe.",
       description:
-          "Compile one or more source files into object files or a single executable.",
+          "Compile source files into .o files or an exe.",
       inheritFlags: true,
       flags: [
         NatrixTextFlag(
@@ -59,12 +60,17 @@ final NatrixCommand clang = NatrixCommand(
           tooltip: "Add a directory to the header search path.",
         ),
       ],
-      callback: (options) {},
+      callback: (options) {
+        final NatrixTheme theme = NatrixDefaultTheme.of(options.getContext());
+        final NatrixStdio io = NatrixStdio();
+        io.writeLines(lines: theme.root.format());
+        io.newLine();
+      },
     ),
     NatrixCommand(
       id: "link",
       description:
-          "Link object files and static libraries into a single executable or shared library.",
+          "Link .o files and libraries into an exe or shared library.",
       flags: [
         NatrixTextFlag(
           id: "output",
@@ -119,6 +125,7 @@ final NatrixCommand clang = NatrixCommand(
     final NatrixTheme theme = NatrixDefaultTheme.of(options.getContext());
     final NatrixStdio io = NatrixStdio();
     io.writeLines(lines: theme.root.format());
+    io.newLine();
   },
 );
 
