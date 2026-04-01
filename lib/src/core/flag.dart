@@ -1,7 +1,6 @@
 import 'package:meta/meta.dart';
 
 import 'package:natrix/core.dart';
-import 'package:natrix/src/core/misc.dart';
 
 /**
  * Typed command-line flag.
