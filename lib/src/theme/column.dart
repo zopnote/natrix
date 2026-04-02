@@ -10,7 +10,7 @@ class NatrixColumn implements NatrixSection {
       return const [];
     }
     final List<NatrixText> o = [];
-    lines.forEach((l) => o.addAll(l.format()));
+    lines.forEach((l) => l.isNotEmpty ? o.addAll(l.format()) : null);
     return o;
   }
 

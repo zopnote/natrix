@@ -8,7 +8,7 @@ class NatrixHeader implements NatrixSection {
   /**
    * A brief description of the [NatrixCommand].
    */
-  final List<NatrixText> tooltip;
+  final NatrixSection tooltip;
 
   /**
    * A brief, structured overview of the possible and correct uses of the [NatrixCommand].
@@ -19,7 +19,7 @@ class NatrixHeader implements NatrixSection {
    * A detailed description of the [NatrixCommand] to inform users
    * about how it works.
    */
-  final List<NatrixText> description;
+  final NatrixSection description;
 
   const NatrixHeader({
     required this.tooltip,
@@ -30,14 +30,9 @@ class NatrixHeader implements NatrixSection {
   List<NatrixText> format() => isEmpty
       ? NatrixBlock.empty().format()
       : NatrixStructure(
-    sections: [
-      NatrixColumn(lines: tooltip.toList()),
-      usage.asLineSection(),
-      NatrixColumn(lines: description.toList()),
-    ],
-  ).format();
+          sections: [tooltip, usage.asLineSection(), description],
+        ).format();
 
   @override
   bool get isEmpty => tooltip.isEmpty && usage.isEmpty && description.isEmpty;
 }
-

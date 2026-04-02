@@ -23,9 +23,15 @@ class NatrixDefaultTheme extends NatrixTheme {
 
   @override
   NatrixHeader get header => NatrixHeader(
-    tooltip: NatrixText(context.cmd.tooltip).wrap(lineLength),
+    tooltip: NatrixColumn(
+      lines: NatrixText(context.cmd.tooltip).wrap(lineLength),
+    ),
     usage: usage.text,
-    description: NatrixText(context.cmd.description).wrap(lineLength),
+    description: context.cmd.hasTooltip()
+        ? NatrixColumn(
+            lines: NatrixText(context.cmd.description).wrap(lineLength),
+          )
+        : NatrixBlock.empty(),
   );
 
   @override
@@ -33,13 +39,14 @@ class NatrixDefaultTheme extends NatrixTheme {
 
   @override
   NatrixLine get usage {
-    String out = "Usage: ";
+    NatrixText usage = NatrixText("Usage: ", style: .bold);
     NatrixCommand command = context.cmd;
     final List<String> cmds = [command.id];
     while (command.hasParent()) {
       command = command.parent!;
       cmds.add(command.id);
     }
+    String out = "";
     out += cmds.reversed.join(" ");
     if (context.cmd.children.isNotEmpty && context.cmd.children.length < 4) {
       out += " <${context.cmd.children.map((e) => e.id).join("|")}>";
@@ -47,11 +54,14 @@ class NatrixDefaultTheme extends NatrixTheme {
     if (context.cmd.argumentTip.isNotEmpty) {
       out += " <${context.cmd.argumentTip}>";
     }
-    return NatrixText(out).asLineSection();
+    return NatrixText.join([usage, NatrixText(out)]).asLineSection();
   }
 
   @override
   NatrixBlock get flags {
+    if (context.cmd.flags.isEmpty) {
+      return NatrixBlock.empty();
+    }
     final List<NatrixText> lines = [];
     _add(Iterable<NatrixFlag> flags) => flags.forEach((flag) {
       String name = "";
@@ -120,12 +130,40 @@ class NatrixDefaultTheme extends NatrixTheme {
   }
 
   NatrixBlock get globalFlags {
+    final List<NatrixText> lines = [];
+    if (context.globalFlags.isEmpty) {
+      return NatrixBlock.empty();
+    }
+    _add(Iterable<NatrixFlag> flags) => flags.forEach((flag) {
+      String name = "";
+      if (flag.hasAcronym) {
+        name += "-${flag.acronym!.c}, ";
+      } else {
+        name += " " * 4;
+      }
+      name += "--${flag.id}";
+      name += " " * (maxFlagLength - name.length);
+      final List<NatrixText> tooltip = NatrixText(
+        flag.tooltip,
+      ).wrap(lineLength - name.length - 1);
+
+      bool first = true;
+      tooltip.forEach((tip) {
+        if (first) {
+          lines.add(NatrixText(name + tip.text));
+          first = !first;
+          return;
+        }
+        lines.add(NatrixText(NatrixChar(' ') * (name.length) + tip.text));
+      });
+    });
+    _add(context.globalFlags.where((e) => e.hasAcronym));
+    _add(context.globalFlags.where((e) => !e.hasAcronym));
     return NatrixBlock(
-      heading: NatrixText("Global flags:", style: NatrixStyle.bold),
+      heading: NatrixText("Global Flags:", style: NatrixStyle.bold),
       content: NatrixStructure(
-        sections: context.globalFlags
-            .map((e) => NatrixText(e.id).asLineSection())
-            .toList(),
+        spacePrefix: 1,
+        sections: [NatrixColumn(lines: lines.toList())],
       ),
     );
   }

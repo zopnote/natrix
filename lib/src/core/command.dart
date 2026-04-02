@@ -131,6 +131,7 @@ class NatrixCommand {
 
   bool hasParent() => parent != null;
   bool hasChildren() => children.isNotEmpty;
+  bool hasTooltip() => _tooltip != null;
 
   /**
    * Returns a copy of this command with the provided [parent] assigned.
