@@ -44,6 +44,7 @@ class NatrixContext {
    */
   final Iterable<NatrixFlag> globalFlags;
 }
+
 /**
  * Data passed to the [NatrixCommandCallback] necessary for working with the
  * libraries internal and external definitions.
@@ -141,7 +142,7 @@ final class NatrixPipeline {
    */
   FutureOr<void> run(NatrixCommand cmd) async {
     final List<String> args = _parser.mergeArguments(_arguments);
-    final List<NatrixFlag> flags = [];
+    final List<NatrixFlag> flags = [..._global];
     bool found = true;
     int i = 0;
     while (found) {
@@ -150,6 +151,7 @@ final class NatrixPipeline {
         found = s.id == args.elementAtOrNull(i);
         if (found) {
           cmd = s.withParent(cmd);
+          flags.addAll(cmd.flags);
           i++;
           break;
         }

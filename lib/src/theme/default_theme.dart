@@ -59,7 +59,10 @@ class NatrixDefaultTheme extends NatrixTheme {
 
   @override
   NatrixBlock get flags {
-    if (context.cmd.flags.isEmpty) {
+    final List<NatrixFlag> flags = context.parserOutput.flags
+        .where((e) => !context.globalFlags.map((g) => g.id).contains(e.id))
+        .toList();
+    if (flags.isEmpty) {
       return NatrixBlock.empty();
     }
     final List<NatrixText> lines = [];
@@ -86,8 +89,8 @@ class NatrixDefaultTheme extends NatrixTheme {
         lines.add(NatrixText(NatrixChar(' ') * (name.length) + tip.text));
       });
     });
-    _add(context.cmd.flags.where((e) => e.hasAcronym));
-    _add(context.cmd.flags.where((e) => !e.hasAcronym));
+    _add(flags.where((e) => e.hasAcronym));
+    _add(flags.where((e) => !e.hasAcronym));
     return NatrixBlock(
       heading: NatrixText("Flags:", style: NatrixStyle.bold),
       content: NatrixStructure(

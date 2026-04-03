@@ -36,6 +36,17 @@ class NatrixStdoutSink {
 }
 
 class NatrixStdio {
+  static late final NatrixStdio _instance;
+  static bool _initialized = false;
+  NatrixStdio._internal();
+  factory NatrixStdio.new() {
+    if (_initialized) {
+      return _instance;
+    }
+    _instance = NatrixStdio._internal();
+    return _instance;
+  }
+
   int _totalLinesWritten = 0;
 
   (String, NatrixMount) requestInput({
